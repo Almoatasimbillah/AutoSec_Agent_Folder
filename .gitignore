@@ -1,0 +1,69 @@
+# =========================================================================
+# Autonomous Security Research Agent — .gitignore
+# Prevents leaking local environments, databases, target data & credentials
+# =========================================================================
+
+# 1. Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# 2. Local Engagement Assessment Data & Target Evidence
+# CRITICAL: Never commit target findings, evidence vault, or assessment databases!
+data/
+*.db
+*.sqlite
+*.sqlite3
+evidence_vault/
+reports/
+
+# 3. Environment Variables & Local Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.cert
+*.crt
+
+# 4. Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# 5. Testing & Code Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.hypothesis/
+
+# 6. IDE & OS files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# 7. Logs & Temporary artifacts
+*.log
+logs/
+tmp/
+temp/
+scratch/

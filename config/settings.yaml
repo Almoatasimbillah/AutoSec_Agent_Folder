@@ -1,0 +1,20 @@
+system:
+  version: "0.1.0"
+  environment: "development"
+  log_level: "INFO"
+
+storage:
+  base_dir: "data"
+  engagements_dir: "data/engagements"
+
+defaults:
+  rate_limit_rps: 5
+  request_timeout_seconds: 15
+  max_retries: 3
+  evidence_hash_algorithm: "sha256"
+
+llm:
+  provider: "local"
+  model: "qwen2.5-coder:14b"
+  fallback_provider: "gemini"
+  temperature: 0.1

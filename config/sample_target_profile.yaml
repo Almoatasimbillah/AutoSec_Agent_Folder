@@ -1,0 +1,46 @@
+# Sample Target Profile YAML for Autonomous Security Research Agent
+program_metadata:
+  program_name: "Acme Corp Bug Bounty"
+  platform: "HackerOne"
+  target_summary: "Acme public web applications, APIs, and cloud services"
+  researcher_handle: "sec_researcher_01"
+  authorization_reference: "H1-ACME-2026-AUTH"
+
+network_and_headers:
+  rate_limit_rps: 5
+  mandatory_headers:
+    X-HackerOne-Research: "sec_researcher_01"
+    User-Agent: "SecurityResearchAgent/1.0 (Authorized Bug Bounty Assessment)"
+
+scope_definition:
+  in_scope:
+    - pattern: "*.acme-corp.com"
+      type: "SUBDOMAIN_WILDCARD"
+      notes: "Main customer applications and public APIs"
+    - pattern: "acme-corp.com"
+      type: "DOMAIN"
+      notes: "Apex domain"
+    - pattern: "192.168.10.0/24"
+      type: "IP_CIDR"
+      notes: "Staging subnet"
+  out_of_scope:
+    - pattern: "billing.acme-corp.com"
+      type: "DOMAIN"
+      notes: "Third-party payment gateway"
+    - pattern: "status.acme-corp.com"
+      type: "DOMAIN"
+      notes: "Hosted by Atlassian Statuspage"
+    - pattern: "careers.acme-corp.com"
+      type: "DOMAIN"
+      notes: "Third-party HR portal"
+
+rule_checkboxes:
+  allow_automated_probing: true
+  allow_rate_limited_fuzzing: true
+  allow_multi_account_testing: true
+  enforce_header_injection: true
+  prohibit_dos_attacks: true
+  prohibit_destructive_writes: true
+  prohibit_credential_bruteforce: true
+  prohibit_social_engineering: true
+  prohibit_third_party_testing: true

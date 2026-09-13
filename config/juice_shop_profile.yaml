@@ -1,0 +1,38 @@
+program_metadata:
+  program_name: "OWASP Juice Shop Assessment"
+  target_summary: "Official OWASP Juice Shop Application Assessment & Fingerprinting"
+  authorization_reference: "OWASP-COMMUNITY-DEMO-AUTH"
+  researcher_handle: "almoatasem_bellah"
+  platform: "OWASP-Project"
+
+network_and_headers:
+  mandatory_headers:
+    User-Agent: "AutonomousSecurityAuditor/1.0"
+    X-Security-Research: "almoatasem_bellah"
+  rate_limit_rps: 5
+
+scope_definition:
+  in_scope:
+    - type: DOMAIN
+      pattern: "preview.owasp-juice.shop"
+      notes: "Main OWASP Juice Shop application host"
+    - type: DOMAIN
+      pattern: "localhost"
+      notes: "Local test environment"
+    - type: IP_EXACT
+      pattern: "127.0.0.1"
+      notes: "Local loopback"
+  out_of_scope:
+    - type: DOMAIN
+      pattern: "github.com"
+      notes: "External third-party source repository"
+    - type: DOMAIN
+      pattern: "*.github.io"
+      notes: "Static documentation sites"
+
+rule_checkboxes:
+  prohibit_dos_attacks: true
+  prohibit_destructive_writes: true
+  prohibit_credential_bruteforce: true
+  prohibit_social_engineering: true
+  prohibit_third_party_testing: true

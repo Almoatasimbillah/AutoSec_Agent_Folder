@@ -1,0 +1,2946 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Autonomous Security Research Agent — Mission Control</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            cyberdark: '#070b14',
+            cybernavy: '#0b1329',
+            sidebarbg: '#090e1a',
+            cardbg: '#0f172a',
+            cardborder: '#1e293b',
+            accent: '#38bdf8',
+            accentamber: '#f59e0b',
+            accentrose: '#f43f5e',
+            accentemerald: '#10b981'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #070b14;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .font-arabic {
+      font-family: 'Cairo', system-ui, sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #090e1a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+    .glow-rose {
+      box-shadow: 0 0 20px -3px rgba(244, 63, 94, 0.4);
+    }
+    .glow-amber {
+      box-shadow: 0 0 20px -3px rgba(245, 158, 11, 0.4);
+    }
+    .glow-sky {
+      box-shadow: 0 0 20px -3px rgba(56, 189, 248, 0.4);
+    }
+    .glow-emerald {
+      box-shadow: 0 0 20px -3px rgba(16, 185, 129, 0.4);
+    }
+  </style>
+</head>
+<body class="text-slate-100 min-h-screen flex bg-[#070b14] antialiased selection:bg-sky-500 selection:text-white">
+
+  <!-- ========================================================================= -->
+  <!-- LEFT FIXED SIDEBAR NAVIGATION (ALWAYS VISIBLE - NEVER TRAPPED) -->
+  <!-- ========================================================================= -->
+  <aside class="w-72 bg-[#090e1a] border-r border-slate-800/80 flex flex-col fixed left-0 top-0 bottom-0 z-50 shadow-2xl">
+    
+    <!-- Branding Header -->
+    <div class="p-5 border-b border-slate-800/80 bg-gradient-to-b from-slate-900/60 to-transparent">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500/20 to-indigo-600/20 border border-sky-500/40 flex items-center justify-center text-sky-400 shadow-inner">
+          <i class="fa-solid fa-shield-halved text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-sm font-extrabold tracking-wide text-white uppercase flex items-center gap-1.5">
+            AutoSec Agent
+            <span class="text-[9px] bg-sky-950 text-sky-400 px-1.5 py-0.5 rounded border border-sky-800 font-mono">v0.2</span>
+          </h1>
+          <p class="text-[11px] text-slate-400 font-medium">Mission Control Orchestrator</p>
+        </div>
+      </div>
+
+      <!-- Current Active Target Pill -->
+      <div class="mt-4 p-2.5 bg-slate-950/80 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+        <div class="truncate mr-2">
+          <span class="text-[10px] text-slate-500 block uppercase font-mono tracking-wider">Active Target</span>
+          <span class="font-bold text-sky-400 font-mono text-[11px] truncate block" id="sidebar-target-name">preview.owasp-juice.shop</span>
+        </div>
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" title="Target Active"></span>
+      </div>
+    </div>
+
+    <!-- Lead Researcher Profile Card -->
+    <div class="p-4 mx-3 my-3 bg-gradient-to-br from-slate-900 via-slate-900/90 to-slate-950 rounded-xl border border-emerald-900/50 shadow-inner">
+      <div class="flex items-center justify-between text-xs mb-1">
+        <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider">Lead Researcher</span>
+        <span class="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800 px-1.5 py-0.2 rounded font-bold">VERIFIED</span>
+      </div>
+      <div class="text-sm font-extrabold text-emerald-400 font-arabic flex items-center gap-1.5 mt-0.5">
+        <i class="fa-solid fa-user-shield text-xs"></i> المعتصم بالله
+      </div>
+      <div class="text-[11px] text-slate-400 font-mono">Al-Moatasem Bellah</div>
+      <div class="text-[10px] text-slate-500 font-mono mt-1">Tag: <code class="text-amber-300">almoatasem_bellah</code></div>
+    </div>
+
+    <!-- Navigation Menu Items -->
+    <nav class="flex-1 px-3 space-y-1.5 overflow-y-auto py-2 text-xs font-semibold">
+      
+      <!-- Tab 1: Scope & Target Studio -->
+      <button onclick="switchTab('scope')" id="nav-btn-scope" class="nav-btn w-full text-left px-3.5 py-2.5 rounded-xl transition flex items-center justify-between group bg-slate-900/40 text-slate-300 hover:bg-slate-800 hover:text-white border border-transparent">
+        <div class="flex items-center gap-3">
+          <div class="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition">
+            <i class="fa-solid fa-crosshairs"></i>
+          </div>
+          <div>
+            <div class="font-bold">Target & Scope Studio</div>
+            <div class="text-[10px] text-slate-500 font-normal">نطاق الفحص وقواعد الهدف</div>
+          </div>
+        </div>
+        <span id="nav-badge-scope" class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-mono">Ready</span>
+      </button>
+
+      <!-- Tab 2: Verified Findings -->
+      <button onclick="switchTab('findings')" id="nav-btn-findings" class="nav-btn w-full text-left px-3.5 py-2.5 rounded-xl transition flex items-center justify-between group bg-rose-950/40 text-rose-300 border border-rose-900/60 shadow">
+        <div class="flex items-center gap-3">
+          <div class="w-7 h-7 rounded-lg bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 group-hover:scale-110 transition">
+            <i class="fa-solid fa-bug"></i>
+          </div>
+          <div>
+            <div class="font-bold">Verified Findings</div>
+            <div class="text-[10px] text-rose-300/70 font-normal">الثغرات المؤكدة</div>
+          </div>
+        </div>
+        <span id="nav-badge-findings" class="text-xs bg-rose-600 text-white font-extrabold px-2 py-0.5 rounded-full shadow">0</span>
+      </button>
+
+      <!-- NEW Tab: Interactive Request Repeater -->
+      <button onclick="switchTab('repeater')" id="nav-btn-repeater" class="nav-btn w-full text-left px-3.5 py-2.5 rounded-xl transition flex items-center justify-between group bg-slate-900/40 text-slate-300 hover:bg-slate-800 hover:text-sky-300 border border-transparent">
+        <div class="flex items-center gap-3">
+          <div class="w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 group-hover:scale-110 transition">
+            <i class="fa-solid fa-repeat"></i>
+          </div>
+          <div>
+            <div class="font-bold text-sky-300">Request Repeater</div>
+            <div class="text-[10px] text-slate-500 font-normal">مكرر الطلبات اليدوي (Burp)</div>
+          </div>
+        </div>
+        <span class="text-[9px] bg-sky-950 text-sky-300 border border-sky-800 px-1.5 py-0.5 rounded font-mono font-bold">LIVE</span>
+      </button>
+
+      <!-- NEW Tab: AI Security Co-Pilot -->
+      <button onclick="switchTab('copilot')" id="nav-btn-copilot" class="nav-btn w-full text-left px-3.5 py-2.5 rounded-xl transition flex items-center justify-between group bg-slate-900/40 text-slate-300 hover:bg-slate-800 hover:text-purple-300 border border-transparent">
+        <div class="flex items-center gap-3">
+          <div class="w-7 h-7 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 group-hover:scale-110 transition">
+            <i class="fa-solid fa-robot"></i>
+          </div>
+          <div>
+            <div class="font-bold text-purple-300">AI Security Co-Pilot</div>
+            <div class="text-[10px] text-slate-500 font-normal">المساعد الأمني الذكي</div>
+          </div>
+        </div>
+        <span class="text-[9px] bg-purple-950 text-purple-300 border border-purple-800 px-1.5 py-0.5 rounded font-mono font-bold">AI</span>
+      </button>
+
+      <!-- NEW Tab: Tactical Playbooks & Writeups -->
+      <button onclick="switchTab('scenarios')" id="nav-btn-scenarios" class="nav-btn w-full text-left px-3.5 py-2.5 rounded-xl transition flex items-center justify-between group bg-slate-900/40 text-slate-300 hover:bg-slate-800 hover:text-emerald-300 border border-transparent">
+        <div class="flex items-center gap-3">
+          <div class="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition">
+            <i class="fa-solid fa-book-journal-whills"></i>
+          </div>
+          <div>
+            <div class="font-bold text-emerald-300">Playbooks & Writeups</div>
+            <div class="text-[10px] text-slate-500 font-normal">سيناريوهات وتقارير واقعية</div>
+          </div>
+        </div>
+        <span id="nav-badge-scenarios" class="text-[9px] bg-emerald-950 text-emerald-300 border border-emerald-800 px-1.5 py-0.5 rounded font-mono font-bold">0 MATCHED</span>
+      </button>
+
+      <!-- Tab 3: Execution Steps & Audit Trail -->
+      <button onclick="switchTab('timeline')" id="nav-btn-timeline" class="nav-btn w-full text-left px-3.5 py-2.5 rounded-xl transition flex items-center justify-between group bg-slate-900/40 text-slate-300 hover:bg-slate-800 hover:text-amber-300 border border-transparent">
+        <div class="flex items-center gap-3">
+          <div class="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition">
+            <i class="fa-solid fa-timeline"></i>
+          </div>
+          <div>
+            <div class="font-bold">Execution Audit Trail</div>
+            <div class="text-[10px] text-slate-500 font-normal">سجل الخطوات والقرارات</div>
+          </div>
+        </div>
+        <span id="nav-badge-timeline" class="text-xs bg-amber-950 text-amber-300 border border-amber-800 font-bold px-2 py-0.5 rounded-full">0</span>
+      </button>
+
+      <!-- Tab 4: Attack Surface & Recon -->
+      <button onclick="switchTab('attack-surface')" id="nav-btn-attack-surface" class="nav-btn w-full text-left px-3.5 py-2.5 rounded-xl transition flex items-center justify-between group bg-slate-900/40 text-slate-300 hover:bg-slate-800 hover:text-sky-300 border border-transparent">
+        <div class="flex items-center gap-3">
+          <div class="w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 group-hover:scale-110 transition">
+            <i class="fa-solid fa-network-wired"></i>
+          </div>
+          <div>
+            <div class="font-bold">Attack Surface Map</div>
+            <div class="text-[10px] text-slate-500 font-normal">خريطة الخدمات المكتشفة</div>
+          </div>
+        </div>
+      </button>
+
+      <!-- Tab 5: Hypotheses Board -->
+      <button onclick="switchTab('hypotheses')" id="nav-btn-hypotheses" class="nav-btn w-full text-left px-3.5 py-2.5 rounded-xl transition flex items-center justify-between group bg-slate-900/40 text-slate-300 hover:bg-slate-800 hover:text-purple-300 border border-transparent">
+        <div class="flex items-center gap-3">
+          <div class="w-7 h-7 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 group-hover:scale-110 transition">
+            <i class="fa-solid fa-flask"></i>
+          </div>
+          <div>
+            <div class="font-bold">Hypotheses Board</div>
+            <div class="text-[10px] text-slate-500 font-normal">لوحة الفرضيات العلمية</div>
+          </div>
+        </div>
+      </button>
+
+      <!-- Pillar 1: SPA Crawler & Route Miner -->
+      <button onclick="switchTab('crawler')" id="nav-btn-crawler" class="nav-btn w-full text-left px-3.5 py-2.5 rounded-xl transition flex items-center justify-between group bg-slate-900/40 text-slate-300 hover:bg-slate-800 hover:text-sky-300 border border-transparent">
+        <div class="flex items-center gap-3">
+          <div class="w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 group-hover:scale-110 transition">
+            <i class="fa-solid fa-spider"></i>
+          </div>
+          <div>
+            <div class="font-bold text-sky-300">SPA Route Crawler</div>
+            <div class="text-[10px] text-slate-500 font-normal">زاحف المسارات ونقاط الـ REST</div>
+          </div>
+        </div>
+        <span id="nav-badge-crawler" class="text-[9px] bg-sky-950 text-sky-300 border border-sky-800 px-1.5 py-0.5 rounded font-mono font-bold">MINER</span>
+      </button>
+
+      <!-- Pillar 2: Passive Interception Proxy -->
+      <button onclick="switchTab('proxy')" id="nav-btn-proxy" class="nav-btn w-full text-left px-3.5 py-2.5 rounded-xl transition flex items-center justify-between group bg-slate-900/40 text-slate-300 hover:bg-slate-800 hover:text-emerald-300 border border-transparent">
+        <div class="flex items-center gap-3">
+          <div class="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition">
+            <i class="fa-solid fa-tower-broadcast"></i>
+          </div>
+          <div>
+            <div class="font-bold text-emerald-300">Passive Traffic Proxy</div>
+            <div class="text-[10px] text-slate-500 font-normal">بروكسي الالتقاط السلبي :8085</div>
+          </div>
+        </div>
+        <span id="nav-badge-proxy" class="text-[9px] bg-emerald-950 text-emerald-300 border border-emerald-800 px-1.5 py-0.5 rounded font-mono font-bold">OFF</span>
+      </button>
+
+      <!-- Pillar 3: Parameter Anomaly Miner -->
+      <button onclick="switchTab('param-miner')" id="nav-btn-param-miner" class="nav-btn w-full text-left px-3.5 py-2.5 rounded-xl transition flex items-center justify-between group bg-slate-900/40 text-slate-300 hover:bg-slate-800 hover:text-amber-300 border border-transparent">
+        <div class="flex items-center gap-3">
+          <div class="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition">
+            <i class="fa-solid fa-vial"></i>
+          </div>
+          <div>
+            <div class="font-bold text-amber-300">Parameter Miner</div>
+            <div class="text-[10px] text-slate-500 font-normal">منقّب المعاملات وشذوذ الاستجابة</div>
+          </div>
+        </div>
+        <span class="text-[9px] bg-amber-950 text-amber-300 border border-amber-800 px-1.5 py-0.5 rounded font-mono font-bold">DIFF</span>
+      </button>
+
+      <!-- Pillar 4: Vulnerability Chaining & Visual Attack Graph -->
+      <button onclick="switchTab('attack-graph')" id="nav-btn-attack-graph" class="nav-btn w-full text-left px-3.5 py-2.5 rounded-xl transition flex items-center justify-between group bg-slate-900/40 text-slate-300 hover:bg-slate-800 hover:text-rose-300 border border-transparent">
+        <div class="flex items-center gap-3">
+          <div class="w-7 h-7 rounded-lg bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 group-hover:scale-110 transition">
+            <i class="fa-solid fa-diagram-project"></i>
+          </div>
+          <div>
+            <div class="font-bold text-rose-300">Visual Attack Graph</div>
+            <div class="text-[10px] text-slate-500 font-normal">سلاسل الاستغلال ومخطط الهجوم</div>
+          </div>
+        </div>
+        <span id="nav-badge-attack-graph" class="text-[9px] bg-rose-950 text-rose-300 border border-rose-800 px-1.5 py-0.5 rounded font-mono font-bold">GRAPH</span>
+      </button>
+
+      <!-- Tab 6: Reports & Deliverables -->
+      <button onclick="switchTab('reports')" id="nav-btn-reports" class="nav-btn w-full text-left px-3.5 py-2.5 rounded-xl transition flex items-center justify-between group bg-slate-900/40 text-slate-300 hover:bg-slate-800 hover:text-emerald-300 border border-transparent">
+        <div class="flex items-center gap-3">
+          <div class="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition">
+            <i class="fa-solid fa-file-shield"></i>
+          </div>
+          <div>
+            <div class="font-bold">Deliverables & Evidence</div>
+            <div class="text-[10px] text-slate-500 font-normal">التقارير وحزم الإثبات</div>
+          </div>
+        </div>
+      </button>
+
+      <!-- Tab 7: ChatGPT Profile Importer -->
+      <button onclick="switchTab('profile')" id="nav-btn-profile" class="nav-btn w-full text-left px-3.5 py-2.5 rounded-xl transition flex items-center justify-between group bg-slate-900/40 text-slate-300 hover:bg-slate-800 hover:text-sky-300 border border-transparent">
+        <div class="flex items-center gap-3">
+          <div class="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+          </div>
+          <div>
+            <div class="font-bold">ChatGPT YAML Import</div>
+            <div class="text-[10px] text-slate-500 font-normal">استيراد متقدم بالذكاء الاصطناعي</div>
+          </div>
+        </div>
+      </button>
+
+    </nav>
+
+    <!-- Sidebar Bottom Status Footer -->
+    <div class="p-4 border-t border-slate-800/80 bg-slate-950/60 text-[11px] space-y-1.5 font-mono">
+      <div class="flex items-center justify-between">
+        <span class="text-slate-500">Gate Engine:</span>
+        <span class="text-emerald-400 font-bold">STRICT (ENFORCED)</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-slate-500">Rate Limit:</span>
+        <span class="text-sky-300" id="sidebar-rate-limit">5 RPS</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-slate-500">System State:</span>
+        <span class="text-amber-400 font-bold" id="sidebar-state">STANDBY</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ========================================================================= -->
+  <!-- MAIN WORKSPACE CONTENT AREA (OFFSET BY SIDEBAR WIDTH) -->
+  <!-- ========================================================================= -->
+  <div class="flex-1 ml-72 flex flex-col min-h-screen">
+
+    <!-- Top Sticky Command Header -->
+    <header class="bg-[#090e1a]/90 backdrop-blur-md border-b border-slate-800/80 px-8 py-3.5 flex items-center justify-between sticky top-0 z-40 shadow-lg">
+      
+      <!-- Current Page Breadcrumb & Title -->
+      <div class="flex items-center space-x-3">
+        <div class="text-xs text-slate-400 flex items-center gap-2">
+          <span>Mission Control</span>
+          <i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i>
+          <span id="page-breadcrumb" class="font-bold text-white text-sm">Verified Findings</span>
+        </div>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="flex items-center gap-3">
+        <button onclick="triggerFullAssessment()" id="btn-top-assessment" class="flex items-center gap-2 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-lg glow-rose transition transform active:scale-95">
+          <i class="fa-solid fa-bolt"></i> Run Security Assessment
+        </button>
+        <button onclick="triggerRecon()" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-sky-300 text-xs font-semibold px-3.5 py-2 rounded-xl border border-slate-700 transition">
+          <i class="fa-solid fa-satellite-dish"></i> Run In-Scope Recon
+        </button>
+        <button onclick="generateReports()" class="flex items-center gap-2 bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow transition">
+          <i class="fa-solid fa-file-shield"></i> Export Reports
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Dynamic Tab Content -->
+    <main class="flex-1 p-8 space-y-6 max-w-7xl w-full mx-auto">
+
+      <!-- ========================================================================= -->
+      <!-- TAB 1: DEDICATED TARGET & SCOPE STUDIO -->
+      <!-- ========================================================================= -->
+      <div id="tab-scope" class="tab-content hidden space-y-6">
+        <div class="bg-gradient-to-r from-slate-900 via-slate-900/90 to-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-2">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <div class="text-xs text-emerald-400 font-bold uppercase tracking-wider font-mono flex items-center gap-1.5">
+                <i class="fa-solid fa-bullseye"></i> Scope Definition & Security Boundaries
+              </div>
+              <h2 class="text-2xl font-extrabold text-white mt-1">Target & Scope Studio</h2>
+              <p class="text-xs text-slate-400">حدد نطاق الفحص (In-Scope) والمواقع الممنوعة (Out-of-Scope) وقواعد الأمان مباشرة من هنا دون تعقيد.</p>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-slate-400 mr-1">نماذج جاهزة:</span>
+              <button onclick="loadPresetProfile('juice_shop')" class="text-xs bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-800 font-semibold px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5">
+                <i class="fa-solid fa-bolt"></i> OWASP Juice Shop
+              </button>
+              <button onclick="loadPresetProfile('acme')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold px-3 py-1.5 rounded-lg transition">
+                <i class="fa-solid fa-file-lines"></i> Acme Corp
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-5 shadow-xl">
+            <h3 class="text-base font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-3">
+              <i class="fa-solid fa-plus-circle text-sky-400"></i> إعداد هدف جديد (Direct Scope Setup)
+            </h3>
+
+            <div class="space-y-4 text-xs">
+              <div>
+                <label class="block text-slate-300 font-bold mb-1.5 flex items-center justify-between">
+                  <span>الهدف الرئيسي (Primary Target Host or URL):</span>
+                  <span class="text-slate-500 font-normal font-mono">e.g. preview.owasp-juice.shop OR *.target.com</span>
+                </label>
+                <div class="flex gap-2">
+                  <div class="relative flex-1">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-globe"></i></span>
+                    <input type="text" id="studio-primary-target" value="preview.owasp-juice.shop" class="w-full bg-slate-950 border border-slate-700 focus:border-sky-500 rounded-xl pl-9 pr-3 py-2.5 text-white font-mono text-xs focus:outline-none" placeholder="Enter target domain or URL">
+                  </div>
+                  <select id="studio-target-type" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-300 text-xs focus:outline-none">
+                    <option value="DOMAIN">Exact Domain</option>
+                    <option value="SUBDOMAIN_WILDCARD">Subdomain Wildcard (*.domain)</option>
+                    <option value="IP_CIDR">IP Subnet (CIDR)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-slate-300 font-bold mb-1.5">أهداف إضافية مسموح بها (Additional In-Scope - مفصول بفاصلة أو سطر جديد):</label>
+                <textarea id="studio-additional-inscope" rows="2" class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl p-2.5 text-white font-mono text-xs focus:outline-none" placeholder="api.target.com&#10;app.target.com"></textarea>
+              </div>
+
+              <div>
+                <label class="block text-slate-300 font-bold mb-1.5 flex items-center gap-1.5 text-rose-300">
+                  <i class="fa-solid fa-ban"></i> نطاقات مستبعدة وممنوع لمسها (Out-of-Scope Exclusions):
+                </label>
+                <textarea id="studio-out-of-scope" rows="2" class="w-full bg-slate-950 border border-slate-700 focus:border-rose-500 rounded-xl p-2.5 text-white font-mono text-xs focus:outline-none" placeholder="billing.target.com&#10;status.target.com">github.com
+*.github.io</textarea>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                <div>
+                  <label class="block text-slate-400 font-medium mb-1">معدل الطلبات في الثانية (Rate Limit RPS):</label>
+                  <input type="number" id="studio-rps" value="5" min="1" max="50" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-white font-mono text-xs">
+                </div>
+                <div>
+                  <label class="block text-slate-400 font-medium mb-1">اسم الباحث المعتمد (Researcher Handle):</label>
+                  <input type="text" id="studio-researcher" value="almoatasem_bellah" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-emerald-400 font-mono text-xs font-bold" readonly>
+                </div>
+              </div>
+
+              <div class="pt-3 flex justify-end">
+                <button onclick="saveQuickScope()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold px-6 py-2.5 rounded-xl shadow-lg glow-emerald transition flex items-center gap-2">
+                  <i class="fa-solid fa-shield-check"></i> تطبيق وحفظ النطاق فوراً (Apply & Enforce Scope)
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl flex flex-col justify-between">
+            <div class="space-y-3 text-xs">
+              <h3 class="text-base font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-3">
+                <i class="fa-solid fa-list-check text-emerald-400"></i> قواعد الأمان الحتمية (Guardrails)
+              </h3>
+              <p class="text-slate-400 text-[11px] leading-relaxed">
+                يتم فحص كل طلب أمني بواسطة بوابة <b>Deterministic Action Gate</b> قبل خروج أي باكت عبر الشبكة:
+              </p>
+
+              <div class="space-y-2.5 pt-1">
+                <div class="flex items-start gap-2.5 p-2.5 bg-slate-950 rounded-xl border border-emerald-900/40">
+                  <i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i>
+                  <div>
+                    <span class="font-bold text-slate-200">حقن الهيدرز الإلزامية</span>
+                    <p class="text-[11px] text-slate-400">حقن <code class="text-amber-300">X-Security-Research: almoatasem_bellah</code> في كل طلب.</p>
+                  </div>
+                </div>
+
+                <div class="flex items-start gap-2.5 p-2.5 bg-slate-950 rounded-xl border border-emerald-900/40">
+                  <i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i>
+                  <div>
+                    <span class="font-bold text-slate-200">منع هجمات حجب الخدمة (DoS)</span>
+                    <p class="text-[11px] text-slate-400">حظر أي طلبات مكثفة تضر باستقرار الخادم.</p>
+                  </div>
+                </div>
+
+                <div class="flex items-start gap-2.5 p-2.5 bg-slate-950 rounded-xl border border-emerald-900/40">
+                  <i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i>
+                  <div>
+                    <span class="font-bold text-slate-200">منع الكتابة التخريبية (Destructive Writes)</span>
+                    <p class="text-[11px] text-slate-400">حظر طلبات الحذف أو التعديل العنيف للبيانات.</p>
+                  </div>
+                </div>
+
+                <div class="flex items-start gap-2.5 p-2.5 bg-slate-950 rounded-xl border border-emerald-900/40">
+                  <i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i>
+                  <div>
+                    <span class="font-bold text-slate-200">حظر التخمين العنيف (Bruteforce)</span>
+                    <p class="text-[11px] text-slate-400">منع محاولات كسر كلمات المرور العشوائية.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="p-3 bg-emerald-950/40 border border-emerald-900/60 rounded-xl text-[11px] text-emerald-300 mt-3">
+              <i class="fa-solid fa-lock text-emerald-400 mr-1"></i>
+              Default-Deny مفعل: أي نطاق غير مدرج في القائمة يعتبر ممنوعاً فوراً.
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-3">
+            <div>
+              <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-table-list text-sky-400"></i> القواعد والنطاقات النشطة حالياً في الذاكرة
+              </h3>
+              <p class="text-xs text-slate-400">جدول النطاقات المطبقة في المحرك الأمني:</p>
+            </div>
+            <button onclick="loadScopeRules()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700 transition">
+              <i class="fa-solid fa-rotate-right mr-1"></i> تحديث القائمة
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border border-slate-800 rounded-xl overflow-hidden">
+              <thead class="bg-slate-950 text-slate-400 border-b border-slate-800 uppercase tracking-wider text-[11px]">
+                <tr>
+                  <th class="p-3">Effect</th>
+                  <th class="p-3">Target Pattern</th>
+                  <th class="p-3">Rule Type</th>
+                  <th class="p-3">Priority</th>
+                  <th class="p-3">Notes</th>
+                  <th class="p-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="scope-table-body" class="divide-y divide-slate-800/60 bg-slate-950/40 font-mono">
+                <tr>
+                  <td colspan="6" class="p-6 text-center text-slate-500 font-sans">No scope rules loaded yet.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================================================= -->
+      <!-- TAB 2: VERIFIED FINDINGS (DEFAULT PRIMARY VIEW) -->
+      <!-- ========================================================================= -->
+      <div id="tab-findings" class="tab-content space-y-6">
+        <div class="bg-gradient-to-r from-slate-900 via-slate-900/90 to-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-2">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <div class="text-xs text-rose-400 font-bold uppercase tracking-wider font-mono flex items-center gap-1.5">
+                <i class="fa-solid fa-shield-virus"></i> Security Findings Audit
+              </div>
+              <h2 class="text-2xl font-extrabold text-white mt-1">Verified Vulnerabilities</h2>
+              <p class="text-xs text-slate-400">كافة الثغرات الأمنية المكتشفة مع خطوات إعادة الإنتاج (PoC)، زر فتح الطلب في الـ Repeater، وتوليد تقارير HackerOne الجاهزة.</p>
+            </div>
+            <button onclick="triggerFullAssessment()" class="bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-lg glow-rose transition flex items-center gap-2">
+              <i class="fa-solid fa-play"></i> Run Security Assessment
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between flex-wrap gap-3 bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="text-slate-400 font-medium">Filter Severity:</span>
+            <div class="flex items-center bg-slate-950 border border-slate-800 rounded-lg p-1 space-x-1">
+              <button onclick="filterFindings('ALL')" class="filter-btn-findings px-3 py-1 rounded bg-slate-800 text-white font-bold" id="filter-f-all">All</button>
+              <button onclick="filterFindings('HIGH')" class="filter-btn-findings px-3 py-1 rounded text-rose-400 hover:bg-slate-900 font-semibold" id="filter-f-high">High / Critical</button>
+              <button onclick="filterFindings('MEDIUM')" class="filter-btn-findings px-3 py-1 rounded text-amber-400 hover:bg-slate-900 font-semibold" id="filter-f-med">Medium</button>
+              <button onclick="filterFindings('LOW')" class="filter-btn-findings px-3 py-1 rounded text-sky-400 hover:bg-slate-900 font-semibold" id="filter-f-low">Low / Info</button>
+            </div>
+          </div>
+          <div class="text-slate-400 text-xs">
+            Showing <strong class="text-white" id="findings-display-count">0</strong> findings
+          </div>
+        </div>
+
+        <div class="space-y-4" id="findings-container">
+          <div class="p-12 text-center text-slate-500 border border-dashed border-slate-800 rounded-2xl space-y-3">
+            <i class="fa-solid fa-radar text-3xl text-slate-600 animate-spin"></i>
+            <p class="text-sm font-semibold text-slate-400">No verified findings loaded yet.</p>
+            <p class="text-xs text-slate-500">Click <b>"Run Security Assessment"</b> to begin probing headers, sensitive endpoints, and differential access.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================================================= -->
+      <!-- NEW TAB: INTERACTIVE REQUEST REPEATER (BURP SUITE-STYLE LIVE HTTP REPEATER) -->
+      <!-- ========================================================================= -->
+      <div id="tab-repeater" class="tab-content hidden space-y-6">
+        <div class="bg-gradient-to-r from-slate-900 via-slate-900/90 to-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-2">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <div class="text-xs text-sky-400 font-bold uppercase tracking-wider font-mono flex items-center gap-1.5">
+                <i class="fa-solid fa-repeat"></i> Interactive Manual Testing & PoC Runner
+              </div>
+              <h2 class="text-2xl font-extrabold text-white mt-1">Interactive Request Repeater</h2>
+              <p class="text-xs text-slate-400">أداة إرسال طلبات حية وتعديل الـ Payloads يدوياً، مع الحماية الحتمية لبوابة الأمان وحقن هيدرز الباحث.</p>
+            </div>
+            
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-slate-400">مسارات مقترحة:</span>
+              <button onclick="setRepeaterTarget('GET', 'https://preview.owasp-juice.shop/api/Challenges')" class="text-xs bg-slate-800 hover:bg-slate-700 text-sky-300 px-3 py-1.5 rounded-lg border border-slate-700 font-mono transition">/api/Challenges</button>
+              <button onclick="setRepeaterTarget('GET', 'https://preview.owasp-juice.shop/ftp')" class="text-xs bg-slate-800 hover:bg-slate-700 text-amber-300 px-3 py-1.5 rounded-lg border border-slate-700 font-mono transition">/ftp</button>
+              <button onclick="setRepeaterTarget('GET', 'https://preview.owasp-juice.shop/api/Users/1')" class="text-xs bg-slate-800 hover:bg-slate-700 text-rose-300 px-3 py-1.5 rounded-lg border border-slate-700 font-mono transition">/api/Users/1</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Two Column Request/Response Studio -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          <!-- Column 1: Request Editor -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl flex flex-col">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                <i class="fa-solid fa-arrow-up-right-from-square text-sky-400"></i> HTTP Request
+              </h3>
+              <span class="text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded font-mono font-bold">
+                <i class="fa-solid fa-shield-check mr-1"></i> Scope Gate Active
+              </span>
+            </div>
+
+            <!-- Target URL & Method -->
+            <div class="flex gap-2">
+              <select id="rep-method" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono text-xs font-bold focus:outline-none focus:border-sky-500">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+                <option value="PATCH">PATCH</option>
+                <option value="HEAD">HEAD</option>
+                <option value="OPTIONS">OPTIONS</option>
+              </select>
+              <input type="text" id="rep-url" value="https://preview.owasp-juice.shop/api/Challenges" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-white font-mono text-xs focus:outline-none focus:border-sky-500" placeholder="https://target.com/path">
+            </div>
+
+            <!-- Request Headers Editor -->
+            <div class="space-y-1">
+              <label class="text-[11px] font-bold text-slate-300 block">Headers (Header-Name: Value per line):</label>
+              <textarea id="rep-headers" rows="4" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-slate-200 font-mono text-xs focus:outline-none focus:border-sky-500 resize-none">User-Agent: AutonomousSecurityAuditor/1.0
+X-Security-Research: almoatasem_bellah
+Accept: application/json, text/plain, */*</textarea>
+            </div>
+
+            <!-- Request Body Editor -->
+            <div class="space-y-1 flex-1 flex flex-col">
+              <label class="text-[11px] font-bold text-slate-300 block">Request Body (JSON / Plain text for POST/PUT):</label>
+              <textarea id="rep-body" rows="6" class="flex-1 w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-slate-200 font-mono text-xs focus:outline-none focus:border-sky-500 resize-none" placeholder='{"email": "test@security.local"}'></textarea>
+            </div>
+
+            <!-- Send Action Bar -->
+            <div class="pt-2 flex justify-between items-center">
+              <div class="text-[11px] text-slate-500">
+                Headers auto-injected: <strong class="text-amber-300">almoatasem_bellah</strong>
+              </div>
+              <button onclick="dispatchRepeaterRequest()" id="btn-rep-send" class="bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-bold text-xs px-6 py-2.5 rounded-xl shadow-lg glow-sky transition flex items-center gap-2">
+                <i class="fa-solid fa-paper-plane"></i> Send Request (إرسال الطلب)
+              </button>
+            </div>
+          </div>
+
+          <!-- Column 2: Response Viewer -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl flex flex-col">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div class="flex items-center gap-3">
+                <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                  <i class="fa-solid fa-arrow-down-left-and-up-right-to-center text-emerald-400"></i> HTTP Response
+                </h3>
+                <span id="rep-resp-status-badge" class="px-2.5 py-0.5 rounded-full text-xs font-mono font-extrabold bg-slate-800 text-slate-400 border border-slate-700">Waiting...</span>
+              </div>
+              <div class="flex items-center gap-2 text-xs font-mono">
+                <span class="text-slate-500">Latency:</span>
+                <span id="rep-resp-latency" class="text-sky-400 font-bold">0 ms</span>
+              </div>
+            </div>
+
+            <!-- Response Headers Accordion/Preview -->
+            <div class="space-y-1">
+              <div class="flex items-center justify-between text-[11px] font-bold text-slate-300">
+                <span>Response Headers:</span>
+                <button onclick="copyResponseText('rep-resp-headers')" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-copy mr-1"></i>Copy Headers</button>
+              </div>
+              <pre id="rep-resp-headers" class="bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono text-[11px] text-slate-400 h-24 overflow-y-auto whitespace-pre-wrap select-all leading-tight">No request sent yet.</pre>
+            </div>
+
+            <!-- Response Body Preview -->
+            <div class="space-y-1 flex-1 flex flex-col">
+              <div class="flex items-center justify-between text-[11px] font-bold text-slate-300">
+                <span>Response Body:</span>
+                <button onclick="copyResponseText('rep-resp-body')" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-copy mr-1"></i>Copy Body</button>
+              </div>
+              <pre id="rep-resp-body" class="flex-1 bg-slate-950 p-3.5 rounded-xl border border-slate-800 font-mono text-[11px] text-emerald-300 overflow-y-auto whitespace-pre-wrap select-all leading-relaxed max-h-[360px]">Click "Send Request" to view live server output.</pre>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ========================================================================= -->
+      <!-- NEW TAB: AI SECURITY CO-PILOT ASSISTANT -->
+      <!-- ========================================================================= -->
+      <div id="tab-copilot" class="tab-content hidden space-y-6">
+        <div class="bg-gradient-to-r from-slate-900 via-slate-900/90 to-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-2">
+          <div class="text-xs text-purple-400 font-bold uppercase tracking-wider font-mono flex items-center gap-1.5">
+            <i class="fa-solid fa-robot"></i> Cybersecurity Reasoning Engine
+          </div>
+          <h2 class="text-2xl font-extrabold text-white mt-1">AI Security Co-Pilot</h2>
+          <p class="text-xs text-slate-400">مساعدك الأمني الذكي: اسأله عن تكتيكات الاستغلال، وتجاوز أخطاء 403، وشرح الثغرات، وصياغة تقارير الـ Bug Bounty.</p>
+        </div>
+
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-5 shadow-xl flex flex-col min-h-[500px]">
+          
+          <!-- Chat Messages Scrollable Box -->
+          <div id="copilot-chat-box" class="flex-1 space-y-4 overflow-y-auto max-h-[460px] pr-2">
+            
+            <!-- Welcome message from CoPilot -->
+            <div class="flex items-start gap-3 bg-slate-950 p-4 rounded-2xl border border-purple-900/40">
+              <div class="w-8 h-8 rounded-xl bg-purple-600/20 border border-purple-500/40 flex items-center justify-center text-purple-400 flex-shrink-0">
+                <i class="fa-solid fa-robot"></i>
+              </div>
+              <div class="space-y-1 text-xs">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-white">AI Security Co-Pilot</span>
+                  <span class="text-[10px] text-slate-500 font-mono">System Ready</span>
+                </div>
+                <div class="text-slate-300 leading-relaxed">
+                  أهلاً بك يا أخي <b>المعتصم بالله</b>! أنا المساعد الأمني لمركز التحكم. تم ربطي ببيانات الهدف المباشرة، وقائمة الثغرات المؤكدة، وخريطة الـ Endpoints. يمكنك سؤالي عن أي تكتيك استغلال أو استفسار وسأقدم لك إجابة تفصيلية فوراً.
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Quick Suggestion Prompts -->
+          <div class="flex items-center gap-2 flex-wrap text-xs pt-2 border-t border-slate-800">
+            <span class="text-slate-500 font-medium">اقتراحات سريعة:</span>
+            <button onclick="askCoPilot('Give me 403 Forbidden bypass headers for /ftp')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1 rounded-lg border border-slate-700 transition">
+              <i class="fa-solid fa-key text-amber-400 mr-1"></i> 403 Bypass Headers
+            </button>
+            <button onclick="askCoPilot('Explain Clickjacking and missing CSP on this target')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1 rounded-lg border border-slate-700 transition">
+              <i class="fa-solid fa-shield-virus text-rose-400 mr-1"></i> Explain CSP Risk
+            </button>
+            <button onclick="askCoPilot('How to test BOLA / IDOR on discovered routes?')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1 rounded-lg border border-slate-700 transition">
+              <i class="fa-solid fa-crosshairs text-sky-400 mr-1"></i> How to test IDOR?
+            </button>
+            <button onclick="askCoPilot('Summarize mission control security posture')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1 rounded-lg border border-slate-700 transition">
+              <i class="fa-solid fa-chart-pie text-emerald-400 mr-1"></i> Security Posture Summary
+            </button>
+          </div>
+
+          <!-- Chat Input Bar -->
+          <div class="flex gap-2">
+            <input type="text" id="copilot-input" onkeydown="if(event.key==='Enter') sendCoPilotMessage()" class="flex-1 bg-slate-950 border border-slate-700 focus:border-purple-500 rounded-xl px-4 py-3 text-white font-sans text-xs focus:outline-none" placeholder="Ask Co-Pilot about target vulnerabilities, bypasses, or testing techniques...">
+            <button onclick="sendCoPilotMessage()" id="btn-copilot-send" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs px-6 py-3 rounded-xl shadow glow-sky transition flex items-center gap-2">
+              <i class="fa-solid fa-paper-plane"></i> إرسال (Send)
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ========================================================================= -->
+      <!-- NEW TAB: TACTICAL PLAYBOOKS & WRITEUP KNOWLEDGE BASE -->
+      <!-- ========================================================================= -->
+      <div id="tab-scenarios" class="tab-content hidden space-y-6">
+        <!-- Header Banner -->
+        <div class="bg-gradient-to-r from-slate-900 via-slate-900/90 to-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div class="text-xs text-emerald-400 font-bold uppercase tracking-wider font-mono flex items-center gap-1.5">
+              <i class="fa-solid fa-book-journal-whills"></i> Real-World Research & Disclosed Reports
+            </div>
+            <h2 class="text-2xl font-extrabold text-white mt-1">Tactical Playbooks & Writeups</h2>
+            <p class="text-xs text-slate-400">سيناريوهات هجومية واقعية مشتقة من تقارير HackerOne وBugcrowd وأبحاث كبار صائدي الثغرات، مطابقة لتقنيات الهدف.</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <button onclick="openCustomWriteupModal()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-lg shadow-emerald-950/50">
+              <i class="fa-solid fa-plus"></i> Import Custom Writeup
+            </button>
+            <button onclick="loadScenarios()" class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-2">
+              <i class="fa-solid fa-arrows-rotate"></i> Refresh
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter & Statistics Bar -->
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-slate-400 font-bold text-[11px] mr-1">Filter:</span>
+            <button onclick="filterScenarios('all')" id="filter-btn-all" class="scenario-filter-btn px-3 py-1.5 bg-emerald-950 text-emerald-300 border border-emerald-800 rounded-lg font-bold">All Playbooks (<span id="count-all-scenarios">0</span>)</button>
+            <button onclick="filterScenarios('matched')" id="filter-btn-matched" class="scenario-filter-btn px-3 py-1.5 bg-slate-800 text-slate-300 border border-slate-700 rounded-lg font-bold hover:bg-slate-700">🎯 Matched to Target (<span id="count-matched-scenarios">0</span>)</button>
+            <button onclick="filterScenarios('api')" id="filter-btn-api" class="scenario-filter-btn px-3 py-1.5 bg-slate-800 text-slate-300 border border-slate-700 rounded-lg font-bold hover:bg-slate-700">API Security</button>
+            <button onclick="filterScenarios('cors')" id="filter-btn-cors" class="scenario-filter-btn px-3 py-1.5 bg-slate-800 text-slate-300 border border-slate-700 rounded-lg font-bold hover:bg-slate-700">CORS & Headers</button>
+            <button onclick="filterScenarios('info')" id="filter-btn-info" class="scenario-filter-btn px-3 py-1.5 bg-slate-800 text-slate-300 border border-slate-700 rounded-lg font-bold hover:bg-slate-700">Info Disclosure</button>
+            <button onclick="filterScenarios('graphql')" id="filter-btn-graphql" class="scenario-filter-btn px-3 py-1.5 bg-slate-800 text-slate-300 border border-slate-700 rounded-lg font-bold hover:bg-slate-700">GraphQL</button>
+          </div>
+          <div id="target-tech-tags" class="flex items-center gap-1.5 text-[11px] text-slate-400 font-mono">
+            <span>Target Tech:</span>
+            <span class="text-sky-400 font-bold" id="matched-tech-display">Auto-detecting...</span>
+          </div>
+        </div>
+
+        <!-- Scenarios Grid -->
+        <div id="scenarios-grid" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="col-span-full p-8 text-center text-slate-500 font-mono text-xs">Loading tactical playbooks...</div>
+        </div>
+      </div>
+
+      <!-- ========================================================================= -->
+      <!-- TAB 3: EXECUTION STEPS & AUDIT TRAIL -->
+      <!-- ========================================================================= -->
+      <div id="tab-timeline" class="tab-content hidden space-y-6">
+        <div class="bg-gradient-to-r from-slate-900 via-slate-900/90 to-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <div class="text-xs text-amber-400 font-bold uppercase tracking-wider font-mono flex items-center gap-1.5">
+                <i class="fa-solid fa-timeline"></i> Transparent Execution Ledger
+              </div>
+              <h2 class="text-2xl font-extrabold text-white mt-1">Execution Steps & Decision Audit Trail</h2>
+              <p class="text-xs text-slate-400">سجل زمني دقيق لكل حركة وقرار اتخذه الوكيل مع السبب، الإشارة المتوقعة، والنتيجة الفعلية.</p>
+            </div>
+
+            <div class="flex items-center flex-wrap gap-2">
+              <button onclick="switchTab('findings')" class="bg-rose-950 hover:bg-rose-900 text-rose-300 text-xs font-bold px-3.5 py-2 rounded-xl border border-rose-800 transition flex items-center gap-1.5">
+                <i class="fa-solid fa-bug"></i> الانتقال للثغرات (Findings)
+              </button>
+              <button onclick="switchTab('repeater')" class="bg-sky-950 hover:bg-sky-900 text-sky-300 text-xs font-bold px-3.5 py-2 rounded-xl border border-sky-800 transition flex items-center gap-1.5">
+                <i class="fa-solid fa-repeat"></i> تجربة الـ Repeater
+              </button>
+              <button onclick="loadTimeline()" class="bg-slate-800 hover:bg-slate-700 text-amber-300 text-xs font-semibold px-3.5 py-2 rounded-xl border border-amber-900/60 transition flex items-center gap-1.5">
+                <i class="fa-solid fa-rotate-right"></i> تحديث
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="relative pl-6 space-y-6 py-2 before:absolute before:left-3 before:top-3 before:bottom-3 before:w-0.5 before:bg-gradient-to-b before:from-amber-500 before:via-sky-500 before:to-emerald-500" id="timeline-container">
+          <div class="p-8 text-center text-slate-500 border border-dashed border-slate-800 rounded-2xl">
+            No execution steps recorded yet. Run a security assessment to populate the audit trail.
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================================================= -->
+      <!-- TAB 4: ATTACK SURFACE & RECON -->
+      <!-- ========================================================================= -->
+      <div id="tab-attack-surface" class="tab-content hidden space-y-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-5 shadow-xl">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+            <div>
+              <h3 class="font-extrabold text-base text-white flex items-center gap-2">
+                <i class="fa-solid fa-network-wired text-sky-400"></i> Attack Surface & Service Discovery
+              </h3>
+              <p class="text-xs text-slate-400">DNS resolution, live host verification, technology stack fingerprinters, and endpoint maps.</p>
+            </div>
+            <button onclick="triggerRecon()" id="btn-run-recon" class="bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold px-4 py-2 rounded-xl shadow glow-sky transition flex items-center gap-2">
+              <i class="fa-solid fa-satellite-dish"></i> Start In-Scope Recon
+            </button>
+          </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl">
+              <span class="text-xs text-slate-400">Total Assets</span>
+              <div class="text-2xl font-extrabold text-sky-400 font-mono mt-1" id="metric-assets">0</div>
+            </div>
+            <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl">
+              <span class="text-xs text-slate-400">Live Hosts</span>
+              <div class="text-2xl font-extrabold text-emerald-400 font-mono mt-1" id="metric-hosts">0</div>
+            </div>
+            <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl">
+              <span class="text-xs text-slate-400">Web Applications</span>
+              <div class="text-2xl font-extrabold text-indigo-400 font-mono mt-1" id="metric-apps">0</div>
+            </div>
+            <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl">
+              <span class="text-xs text-slate-400">Endpoints Probed</span>
+              <div class="text-2xl font-extrabold text-amber-400 font-mono mt-1" id="metric-endpoints">0</div>
+            </div>
+          </div>
+
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs text-slate-300 space-y-3" id="attack-surface-tree">
+            <div class="text-slate-500 text-center py-6 font-sans">Run reconnaissance to discover live topology and mapped endpoints.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================================================= -->
+      <!-- TAB 5: HYPOTHESES BOARD -->
+      <!-- ========================================================================= -->
+      <div id="tab-hypotheses" class="tab-content hidden space-y-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl">
+          <div class="border-b border-slate-800 pb-4">
+            <h3 class="font-extrabold text-base text-white flex items-center gap-2">
+              <i class="fa-solid fa-vial-circle-check text-purple-400"></i> Scientific Security Hypotheses
+            </h3>
+            <p class="text-xs text-slate-400">Structured vulnerability hypotheses formulated from observed signals, tested under differential controls.</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="hypotheses-container">
+            <div class="p-8 text-center text-slate-500 border border-dashed border-slate-800 rounded-2xl col-span-2">
+              No candidate hypotheses recorded yet.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================================================= -->
+      <!-- TAB 6: REPORTS & DELIVERABLES -->
+      <!-- ========================================================================= -->
+      <div id="tab-reports" class="tab-content hidden space-y-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+            <div>
+              <h3 class="font-extrabold text-base text-white flex items-center gap-2">
+                <i class="fa-solid fa-box-archive text-emerald-400"></i> Assessment Deliverables & Evidence Packages
+              </h3>
+              <p class="text-xs text-slate-400">Production-ready executive reports, technical guides, and SHA-256 evidence packages.</p>
+            </div>
+            <button onclick="generateReports()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-xl shadow glow-emerald transition flex items-center gap-2">
+              <i class="fa-solid fa-file-circle-check"></i> Generate Deliverables
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="deliverables-container">
+            <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <i class="fa-solid fa-file-lines text-sky-400 text-2xl"></i>
+                <div>
+                  <div class="font-bold text-sm text-white">Executive Report</div>
+                  <div class="text-xs text-slate-400">High-level risk summary & posture</div>
+                </div>
+              </div>
+              <a href="/api/reports/executive_report.md" target="_blank" class="text-xs bg-slate-800 hover:bg-slate-700 text-sky-300 px-3 py-1.5 rounded-lg border border-slate-700 transition">View Report</a>
+            </div>
+
+            <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <i class="fa-solid fa-code text-indigo-400 text-2xl"></i>
+                <div>
+                  <div class="font-bold text-sm text-white">Technical Findings Report</div>
+                  <div class="text-xs text-slate-400">Step-by-step reproduction & code fixes</div>
+                </div>
+              </div>
+              <a href="/api/reports/technical_report.md" target="_blank" class="text-xs bg-slate-800 hover:bg-slate-700 text-indigo-300 px-3 py-1.5 rounded-lg border border-slate-700 transition">View Report</a>
+            </div>
+
+            <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <i class="fa-solid fa-graduation-cap text-amber-400 text-2xl"></i>
+                <div>
+                  <div class="font-bold text-sm text-white">Mentor Debrief</div>
+                  <div class="text-xs text-slate-400">Decisions, false positives & learnings</div>
+                </div>
+              </div>
+              <a href="/api/reports/mentor_debrief.md" target="_blank" class="text-xs bg-slate-800 hover:bg-slate-700 text-amber-300 px-3 py-1.5 rounded-lg border border-slate-700 transition">View Report</a>
+            </div>
+
+            <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <i class="fa-solid fa-shield-virus text-emerald-400 text-2xl"></i>
+                <div>
+                  <div class="font-bold text-sm text-white">Evidence Manifest (SHA-256)</div>
+                  <div class="text-xs text-slate-400">Cryptographically hashed evidence proofs</div>
+                </div>
+              </div>
+              <a href="/api/reports/manifest.json" target="_blank" class="text-xs bg-slate-800 hover:bg-slate-700 text-emerald-300 px-3 py-1.5 rounded-lg border border-slate-700 transition">View Manifest</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================================================= -->
+      <!-- TAB 7: CHATGPT YAML PROFILE IMPORTER -->
+      <!-- ========================================================================= -->
+      <div id="tab-profile" class="tab-content hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+              <h3 class="font-extrabold text-base text-white flex items-center gap-2">
+                <i class="fa-solid fa-wand-magic-sparkles text-sky-400"></i> استيراد ملف بروفايل كامل عبر ChatGPT (YAML)
+              </h3>
+              <button onclick="loadSampleProfileIntoTextarea()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700 transition">
+                <i class="fa-solid fa-file-code mr-1"></i> تحميل نموذج نصي
+              </button>
+            </div>
+            <p class="text-xs text-slate-400">
+              يمكنك نسخ التعليمات من <code class="bg-slate-800 text-sky-300 px-1 py-0.5 rounded font-mono">config/ChatGPT_Prompt_Template.md</code> وإعطائها لشات جي بي تي مع قواعد الهدف، ثم لصق الـ YAML الناتج هنا:
+            </p>
+            <textarea id="yaml-input" rows="14" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 font-mono text-xs text-slate-200 focus:outline-none focus:border-sky-500 resize-none shadow-inner" placeholder="Paste target_profile.yaml here..."></textarea>
+            <div class="flex justify-end gap-3">
+              <button onclick="importProfile()" class="bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-md glow-sky transition flex items-center gap-2">
+                <i class="fa-solid fa-check-to-slot"></i> استيراد وتطبيق النطاق (Import YAML)
+              </button>
+            </div>
+          </div>
+
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl flex flex-col justify-between">
+            <div class="space-y-3 text-xs">
+              <h3 class="font-extrabold text-base text-white flex items-center gap-2">
+                <i class="fa-solid fa-circle-question text-amber-400"></i> كيف يعمل هذا المحول؟
+              </h3>
+              <p class="text-slate-300 leading-relaxed">
+                1. يقوم ChatGPT بتحويل النص العشوائي من برامج Bug Bounty إلى هيكل YAML موحد.<br><br>
+                2. يستخرج تلقائياً: النطاقات المصرح بها، النطاقات المستبعدة، معدل الفحص (RPS)، وهيدرز إثبات الهوية.<br><br>
+                3. يقوم الوكيل بحقن اسمك <b>المعتصم بالله</b> تلقائياً في كل الحزم البرمجية.
+              </p>
+            </div>
+            <div class="p-4 bg-sky-950/40 border border-sky-900/60 rounded-xl text-xs text-sky-300">
+              <i class="fa-solid fa-lightbulb text-sky-400 mr-1.5"></i>
+              إذا كنت تفضل الإدخال المباشر دون YAML، استخدم تبويب <b>Target & Scope Studio</b> في القائمة الجانبية!
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================================================= -->
+      <!-- TAB: SMART SPA CRAWLER & ROUTE MINER -->
+      <!-- ========================================================================= -->
+      <div id="tab-crawler" class="tab-content hidden space-y-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+            <div>
+              <h2 class="text-base font-extrabold text-white flex items-center gap-2">
+                <i class="fa-solid fa-spider text-sky-400"></i> Smart SPA Route & Endpoint Crawler
+              </h2>
+              <p class="text-xs text-slate-400">
+                استخراج مسارات تطبيقات الويب الحديثة (React, Angular, Vue) ونقاط الـ REST ونماذج الإدخال مع احترام النطاق المعتمد
+              </p>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="fillCrawlerTarget()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700 transition">
+                <i class="fa-solid fa-crosshairs mr-1"></i> استخدام الهدف الحالي
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div class="md:col-span-2">
+              <label class="block text-slate-300 font-bold mb-1">Target Base URL (ضمن النطاق المصرح به):</label>
+              <input type="text" id="crawler-target-url" placeholder="https://preview.owasp-juice.shop" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-sky-500 font-mono">
+            </div>
+            <div>
+              <label class="block text-slate-300 font-bold mb-1">Max JS Scripts to Analyze:</label>
+              <input type="number" id="crawler-max-scripts" value="15" min="1" max="50" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-sky-500 font-mono">
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-2">
+            <div class="text-[11px] text-slate-400 flex items-center gap-1.5 font-mono">
+              <i class="fa-solid fa-shield-halved text-emerald-400"></i> Action Gate: Strict In-Scope Verification Enabled
+            </div>
+            <button onclick="runCrawlerAction()" id="crawler-start-btn" class="bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white text-xs font-bold px-6 py-2.5 rounded-xl shadow-md glow-sky transition flex items-center gap-2">
+              <i class="fa-solid fa-play"></i> لبدء فحص المسارات (Start SPA Crawl)
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-3 shadow">
+            <div class="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400"><i class="fa-solid fa-file-code"></i></div>
+            <div>
+              <div class="text-[10px] text-slate-400 uppercase font-mono">Analyzed Scripts</div>
+              <div class="text-xl font-bold text-white font-mono" id="crawler-stat-scripts">0</div>
+            </div>
+          </div>
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-3 shadow">
+            <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400"><i class="fa-solid fa-route"></i></div>
+            <div>
+              <div class="text-[10px] text-slate-400 uppercase font-mono">SPA Client Routes</div>
+              <div class="text-xl font-bold text-indigo-300 font-mono" id="crawler-stat-routes">0</div>
+            </div>
+          </div>
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-3 shadow">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400"><i class="fa-solid fa-server"></i></div>
+            <div>
+              <div class="text-[10px] text-slate-400 uppercase font-mono">REST Endpoints</div>
+              <div class="text-xl font-bold text-emerald-400 font-mono" id="crawler-stat-apis">0</div>
+            </div>
+          </div>
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-3 shadow">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400"><i class="fa-solid fa-cubes"></i></div>
+            <div>
+              <div class="text-[10px] text-slate-400 uppercase font-mono">Total Discovered</div>
+              <div class="text-xl font-bold text-amber-300 font-mono" id="crawler-stat-total">0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h3 class="font-bold text-white text-sm flex items-center gap-2">
+              <i class="fa-solid fa-list-check text-sky-400"></i> Discovered Routes & Endpoints
+            </h3>
+            <div class="flex items-center gap-2">
+              <input type="text" id="crawler-filter-input" onkeyup="filterCrawlerResults()" placeholder="بحث في المسارات..." class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500">
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="border-b border-slate-800 text-slate-400 uppercase font-mono text-[10px]">
+                  <th class="py-2.5 px-3">Type</th>
+                  <th class="py-2.5 px-3">Method</th>
+                  <th class="py-2.5 px-3">Path / Route</th>
+                  <th class="py-2.5 px-3">Source</th>
+                  <th class="py-2.5 px-3">Parameters</th>
+                  <th class="py-2.5 px-3 text-right">Quick Actions</th>
+                </tr>
+              </thead>
+              <tbody id="crawler-results-tbody" class="divide-y divide-slate-800/60 font-mono">
+                <tr>
+                  <td colspan="6" class="py-8 text-center text-slate-500 font-sans">لم يتم تشغيل الزاحف بعد. أدخل الرابط واضغط "بدء الفحص".</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================================================= -->
+      <!-- TAB: PASSIVE INTERCEPTION PROXY (:8085) -->
+      <!-- ========================================================================= -->
+      <div id="tab-proxy" class="tab-content hidden space-y-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xl shadow">
+                <i class="fa-solid fa-tower-broadcast"></i>
+              </div>
+              <div>
+                <h2 class="text-base font-extrabold text-white flex items-center gap-2">
+                  Built-in Passive Interception Proxy
+                  <span id="proxy-status-pill" class="text-[10px] bg-slate-800 text-slate-400 border border-slate-700 px-2 py-0.5 rounded-full font-mono">STOPPED</span>
+                </h2>
+                <p class="text-xs text-slate-400">
+                  التقاط وتحليل حركة التصفح على المنفذ <code class="text-emerald-400 font-bold font-mono">127.0.0.1:8085</code> سلبيًا (Tokens, Session Cookies, Security Headers)
+                </p>
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="startProxyAction()" id="proxy-start-btn" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold px-4 py-2 rounded-xl shadow glow-emerald transition flex items-center gap-1.5">
+                <i class="fa-solid fa-play"></i> تشغيل البروكسي (Start Proxy)
+              </button>
+              <button onclick="stopProxyAction()" id="proxy-stop-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold px-4 py-2 rounded-xl border border-slate-700 transition flex items-center gap-1.5">
+                <i class="fa-solid fa-stop text-rose-400"></i> إيقاف (Stop)
+              </button>
+              <button onclick="loadProxyTraffic()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3 py-2 rounded-xl border border-slate-700 transition" title="تحديث السجل">
+                <i class="fa-solid fa-rotate"></i>
+              </button>
+              <button onclick="clearProxyTrafficAction()" class="bg-slate-800 hover:bg-rose-950/60 hover:text-rose-300 text-slate-400 text-xs px-3 py-2 rounded-xl border border-slate-700 transition" title="مسح السجل">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="p-3.5 bg-slate-950/80 rounded-xl border border-slate-800 text-xs text-slate-300 flex items-start gap-3">
+            <i class="fa-solid fa-circle-info text-sky-400 mt-0.5 text-sm"></i>
+            <div class="leading-relaxed">
+              <strong>كيفية ربط المتصفح:</strong> اضبط إعدادات البروكسي في متصفحك أو عبر أداة SwitchyOmega إلى <code class="text-sky-300 font-mono bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">127.0.0.1</code> والمنفذ <code class="text-sky-300 font-mono bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">8085</code>. سيقوم البروكسي بتمرير الطلبات تلقائياً مع فحص تسريبات الـ JWT والهيدرز الأمنية الناقصة دون إرسال أي هجمات نشطة.
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-3 shadow">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
+            <div>
+              <div class="text-[10px] text-slate-400 uppercase font-mono">Captured Requests</div>
+              <div class="text-xl font-bold text-white font-mono" id="proxy-stat-captured">0</div>
+            </div>
+          </div>
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-3 shadow">
+            <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400"><i class="fa-solid fa-key"></i></div>
+            <div>
+              <div class="text-[10px] text-slate-400 uppercase font-mono">Sensitive Tokens Flagged</div>
+              <div class="text-xl font-bold text-rose-400 font-mono" id="proxy-stat-tokens">0</div>
+            </div>
+          </div>
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-3 shadow">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div>
+              <div class="text-[10px] text-slate-400 uppercase font-mono">Header Alerts</div>
+              <div class="text-xl font-bold text-amber-300 font-mono" id="proxy-stat-headers">0</div>
+            </div>
+          </div>
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-3 shadow">
+            <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400"><i class="fa-solid fa-filter"></i></div>
+            <div>
+              <div class="text-[10px] text-slate-400 uppercase font-mono">In-Scope Only</div>
+              <div class="text-sm font-bold text-sky-400 mt-1">
+                <label class="inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="proxy-in-scope-toggle" onchange="loadProxyTraffic()" class="sr-only peer">
+                  <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h3 class="font-bold text-white text-sm flex items-center gap-2">
+              <i class="fa-solid fa-list-ol text-emerald-400"></i> Recorded Traffic History
+            </h3>
+            <span class="text-[11px] text-slate-500 font-mono">Real-time passive traffic log</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="border-b border-slate-800 text-slate-400 uppercase font-mono text-[10px]">
+                  <th class="py-2.5 px-3">Time</th>
+                  <th class="py-2.5 px-3">Method</th>
+                  <th class="py-2.5 px-3">Host & Path</th>
+                  <th class="py-2.5 px-3">Status</th>
+                  <th class="py-2.5 px-3">Passive Alerts</th>
+                  <th class="py-2.5 px-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="proxy-traffic-tbody" class="divide-y divide-slate-800/60 font-mono">
+                <tr>
+                  <td colspan="6" class="py-8 text-center text-slate-500 font-sans">لا توجد حزم ملتقطة بعد. شغل البروكسي وقم بتصفح الموقع.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================================================= -->
+      <!-- TAB: DIFFERENTIAL PARAMETER MINER -->
+      <!-- ========================================================================= -->
+      <div id="tab-param-miner" class="tab-content hidden space-y-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+            <div>
+              <h2 class="text-base font-extrabold text-white flex items-center gap-2">
+                <i class="fa-solid fa-vial text-amber-400"></i> Differential Parameter Miner & Anomaly Detector
+              </h2>
+              <p class="text-xs text-slate-400">
+                فحص غير مدمّر لكشف المعاملات المخفية (Hidden Parameters) وانحراف حالة الاستجابة وتحديد سياق الانعكاس (Canary Reflection Context)
+              </p>
+            </div>
+            <button onclick="fillMinerTarget()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700 transition">
+              <i class="fa-solid fa-crosshairs mr-1"></i> استدعاء الهدف النشط
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div class="md:col-span-2">
+              <label class="block text-slate-300 font-bold mb-1">Target Endpoint URL:</label>
+              <input type="text" id="miner-url" placeholder="https://preview.owasp-juice.shop/rest/products/search" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-amber-500 font-mono">
+            </div>
+            <div>
+              <label class="block text-slate-300 font-bold mb-1">Custom Params (comma-separated or empty):</label>
+              <input type="text" id="miner-custom-params" placeholder="debug, admin, redirect, token" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-amber-500 font-mono">
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-2">
+            <span class="text-[11px] text-slate-500 font-mono">
+              <i class="fa-solid fa-shield-check text-emerald-400"></i> Non-destructive differential canary probing (Status, Length, Reflection Context)
+            </span>
+            <button onclick="runParamMinerAction()" id="miner-run-btn" class="bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-slate-950 text-xs font-extrabold px-6 py-2.5 rounded-xl shadow-md glow-amber transition flex items-center gap-2">
+              <i class="fa-solid fa-magnifying-glass"></i> بدء تنقيب المعاملات (Mine Parameters)
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h3 class="font-bold text-white text-sm flex items-center gap-2">
+              <i class="fa-solid fa-chart-line text-amber-400"></i> Detected Parameter Anomalies
+            </h3>
+            <span class="text-[11px] text-slate-500 font-mono" id="miner-results-count">0 Anomalies</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="border-b border-slate-800 text-slate-400 uppercase font-mono text-[10px]">
+                  <th class="py-2.5 px-3">Parameter</th>
+                  <th class="py-2.5 px-3">Status Drift</th>
+                  <th class="py-2.5 px-3">Length Delta</th>
+                  <th class="py-2.5 px-3">Reflection Context</th>
+                  <th class="py-2.5 px-3">Anomaly Score</th>
+                  <th class="py-2.5 px-3">Risk Assessment</th>
+                  <th class="py-2.5 px-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="miner-results-tbody" class="divide-y divide-slate-800/60 font-mono">
+                <tr>
+                  <td colspan="7" class="py-8 text-center text-slate-500 font-sans">لم يتم تشغيل التنقيب بعد. اختر الهدف واضغط "بدء تنقيب المعاملات".</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================================================= -->
+      <!-- TAB: VISUAL ATTACK GRAPH & EXPLOIT CHAINING -->
+      <!-- ========================================================================= -->
+      <div id="tab-attack-graph" class="tab-content hidden space-y-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 text-xl shadow">
+                <i class="fa-solid fa-diagram-project"></i>
+              </div>
+              <div>
+                <h2 class="text-base font-extrabold text-white flex items-center gap-2">
+                  Visual Attack Graph & Vulnerability Chaining
+                </h2>
+                <p class="text-xs text-slate-400">
+                  ربط الثغرات الفردية في سلاسل استغلال مركبة (Compound Exploit Chains) وحساب معيار الخطورة التراكمي CVSS 3.1
+                </p>
+              </div>
+            </div>
+            <button onclick="loadAttackGraph()" class="bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-md glow-rose transition flex items-center gap-2">
+              <i class="fa-solid fa-rotate"></i> تحديث مخطط الهجوم (Build Graph)
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="p-4 bg-slate-950/80 rounded-xl border border-slate-800">
+              <div class="text-[10px] text-slate-400 font-mono uppercase">Asset Nodes</div>
+              <div class="text-xl font-bold text-sky-400 font-mono mt-1" id="graph-stat-assets">0</div>
+            </div>
+            <div class="p-4 bg-slate-950/80 rounded-xl border border-slate-800">
+              <div class="text-[10px] text-slate-400 font-mono uppercase">Vulnerabilities</div>
+              <div class="text-xl font-bold text-amber-400 font-mono mt-1" id="graph-stat-vulns">0</div>
+            </div>
+            <div class="p-4 bg-slate-950/80 rounded-xl border border-slate-800">
+              <div class="text-[10px] text-slate-400 font-mono uppercase">Exploit Chains</div>
+              <div class="text-xl font-bold text-rose-400 font-mono mt-1" id="graph-stat-chains">0</div>
+            </div>
+            <div class="p-4 bg-slate-950/80 rounded-xl border border-slate-800">
+              <div class="text-[10px] text-slate-400 font-mono uppercase">Max Compound CVSS</div>
+              <div class="text-xl font-bold text-red-400 font-mono mt-1" id="graph-stat-max-cvss">0.0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-extrabold text-white text-sm flex items-center gap-2">
+              <i class="fa-solid fa-link text-rose-400"></i> Correlated Multi-Step Exploit Chains
+            </h3>
+            <span class="text-xs text-slate-500">سلاسل الهجوم المتعددة التي ترفع تصنيف الخطورة والمكافأة</span>
+          </div>
+
+          <div id="graph-chains-container" class="space-y-4">
+            <div class="p-8 text-center bg-slate-900 border border-slate-800 rounded-2xl text-slate-500 text-xs">
+              اضغط "تحديث مخطط الهجوم" لحساب سلاسل الاستغلال التراكمية.
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl">
+          <h3 class="font-bold text-white text-sm flex items-center gap-2 border-b border-slate-800 pb-3">
+            <i class="fa-solid fa-circle-nodes text-purple-400"></i> Graph Node Topology
+          </h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="border-b border-slate-800 text-slate-400 uppercase font-mono text-[10px]">
+                  <th class="py-2.5 px-3">Node ID</th>
+                  <th class="py-2.5 px-3">Label</th>
+                  <th class="py-2.5 px-3">Type</th>
+                  <th class="py-2.5 px-3">Severity</th>
+                  <th class="py-2.5 px-3">CVSS</th>
+                </tr>
+              </thead>
+              <tbody id="graph-nodes-tbody" class="divide-y divide-slate-800/60 font-mono">
+                <tr>
+                  <td colspan="5" class="py-6 text-center text-slate-500 font-sans">اضغط "تحديث مخطط الهجوم" لعرض عناصر الرسم البياني.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: HACKERONE 1-CLICK SUBMISSION REPORT -->
+  <!-- ========================================================================= -->
+  <div id="bounty-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-2xl w-full space-y-4 shadow-2xl flex flex-col max-h-[90vh]">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="w-8 h-8 rounded-lg bg-rose-600/20 border border-rose-500/40 flex items-center justify-center text-rose-400">
+            <i class="fa-solid fa-flag"></i>
+          </span>
+          <div>
+            <h3 class="font-bold text-white text-base">HackerOne / Bugcrowd Report Draft</h3>
+            <p class="text-[11px] text-slate-400">تقرير أمني مهني جاهز للتقديم في منصات الـ Bug Bounty</p>
+          </div>
+        </div>
+        <button onclick="closeBountyModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <!-- Report Markdown Content Preview -->
+      <div class="flex-1 overflow-y-auto space-y-2">
+        <div class="flex justify-between items-center text-xs">
+          <span class="text-slate-400">Formatted Markdown:</span>
+          <span class="text-emerald-400 font-mono text-[11px] font-bold" id="bounty-modal-cvss">CVSS 3.1: 7.5 (High)</span>
+        </div>
+        <textarea id="bounty-report-content" rows="14" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-[11px] text-slate-200 focus:outline-none focus:border-rose-500 resize-none select-all leading-relaxed" readonly></textarea>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex justify-between items-center pt-2 border-t border-slate-800">
+        <span class="text-[11px] text-slate-500 font-mono">Researcher: <strong>المعتصم بالله</strong></span>
+        <div class="flex gap-2">
+          <button onclick="closeBountyModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold">إغلاق</button>
+          <button onclick="copyBountyReport()" class="px-5 py-2 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-bold rounded-xl text-xs shadow glow-rose flex items-center gap-2">
+            <i class="fa-solid fa-copy"></i> نسخ التقرير (Copy Markdown)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: IMPORT CUSTOM WRITEUP / ATTACK SCENARIO -->
+  <!-- ========================================================================= -->
+  <div id="custom-writeup-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-2xl w-full space-y-4 shadow-2xl flex flex-col max-h-[90vh]">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="w-8 h-8 rounded-lg bg-emerald-600/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+            <i class="fa-solid fa-file-import"></i>
+          </span>
+          <div>
+            <h3 class="font-bold text-white text-base">Import Custom Bug Bounty Writeup</h3>
+            <p class="text-[11px] text-slate-400">أدخل فكرة أو تقرير ثغرة قرأته ليقوم الوكيل بتحويله لسيناريو اختبار فوري</p>
+          </div>
+        </div>
+        <button onclick="closeCustomWriteupModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto space-y-3 pr-1 text-xs">
+        <div>
+          <label class="block text-slate-300 font-bold mb-1">Playbook / Writeup Title:</label>
+          <input type="text" id="cw-title" placeholder="e.g. Host Header Poisoning in Password Reset" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-300 font-bold mb-1">Category:</label>
+            <select id="cw-category" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
+              <option value="API Security">API Security</option>
+              <option value="CORS & Headers">CORS & Headers</option>
+              <option value="OAuth & Auth">OAuth & Auth</option>
+              <option value="Info Disclosure">Info Disclosure</option>
+              <option value="GraphQL">GraphQL</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-300 font-bold mb-1">Severity:</label>
+            <select id="cw-severity" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
+              <option value="HIGH">High</option>
+              <option value="MEDIUM" selected>Medium</option>
+              <option value="CRITICAL">Critical</option>
+              <option value="LOW">Low</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-bold mb-1">Target Technologies (comma separated):</label>
+          <input type="text" id="cw-tech" placeholder="e.g. node, express, angular, oauth, spring" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500 font-mono">
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-bold mb-1">Public Reference / Source:</label>
+          <input type="text" id="cw-reference" placeholder="e.g. HackerOne Report #123456 or Medium article URL" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-bold mb-1">Hypothesis Statement:</label>
+          <input type="text" id="cw-hypothesis" placeholder="e.g. Target server reflects X-Forwarded-Host in password reset email link" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-bold mb-1">Root Cause & Vulnerability Summary:</label>
+          <textarea id="cw-summary" rows="3" placeholder="Explain the root cause observed in the writeup..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500 resize-none"></textarea>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div class="col-span-1">
+            <label class="block text-slate-300 font-bold mb-1">Sample Method:</label>
+            <select id="cw-method" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500 font-mono">
+              <option value="GET">GET</option>
+              <option value="POST">POST</option>
+              <option value="PUT">PUT</option>
+              <option value="OPTIONS">OPTIONS</option>
+            </select>
+          </div>
+          <div class="col-span-2">
+            <label class="block text-slate-300 font-bold mb-1">Sample Path:</label>
+            <input type="text" id="cw-path" placeholder="/rest/user/reset-password" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500 font-mono">
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center pt-2 border-t border-slate-800">
+        <span class="text-[11px] text-slate-500 font-mono">Ingestion: <strong>Security Knowledge Base</strong></span>
+        <div class="flex gap-2">
+          <button onclick="closeCustomWriteupModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold">Cancel</button>
+          <button onclick="submitCustomWriteup()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow flex items-center gap-2">
+            <i class="fa-solid fa-check"></i> Save & Ingest Playbook
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- JAVASCRIPT APPLICATION LOGIC -->
+  <!-- ========================================================================= -->
+  <script>
+    let cachedFindings = [];
+    let cachedTimeline = [];
+    let currentFindingFilter = 'ALL';
+
+    const pageTitles = {
+      'scope': 'Target & Scope Studio (إعداد النطاق والأهداف)',
+      'findings': 'Verified Vulnerabilities (الثغرات المؤكدة)',
+      'repeater': 'Interactive Request Repeater (مكرر الطلبات اليدوي)',
+      'copilot': 'AI Security Co-Pilot (المساعد الأمني الذكي)',
+      'timeline': 'Execution Steps & Audit Trail (سجل الخطوات والقرارات)',
+      'attack-surface': 'Attack Surface & Recon (خريطة الخدمات)',
+      'hypotheses': 'Hypotheses Board (لوحة الفرضيات)',
+      'reports': 'Deliverables & Reports (التقارير والمستخرجات)',
+      'profile': 'ChatGPT YAML Import (استيراد متقدم)',
+      'scenarios': 'Tactical Playbooks & Writeups (السيناريوهات والتقارير الواقعية)',
+      'crawler': 'Smart SPA Route & Endpoint Miner (زاحف المسارات ونقاط الـ REST)',
+      'proxy': 'Built-in Passive Interception Proxy :8085 (بروكسي الالتقاط السلبي)',
+      'param-miner': 'Parameter Miner & Anomaly Detector (منقّب المعاملات وشذوذ الاستجابة)',
+      'attack-graph': 'Visual Attack Graph & Exploit Chaining (سلاسل الاستغلال ومخطط الهجوم)'
+    };
+
+    // Switch active tab smoothly
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('bg-rose-950/60', 'bg-amber-950/60', 'bg-sky-950/60', 'bg-emerald-950/60', 'bg-purple-950/60', 'text-white', 'text-rose-300', 'text-amber-300', 'text-sky-300', 'text-emerald-300', 'text-purple-300', 'border-rose-900/60', 'border-amber-900/60', 'border-sky-900/60', 'border-emerald-900/60', 'border-purple-900/60');
+        btn.classList.add('bg-slate-900/40', 'text-slate-300', 'border-transparent');
+      });
+
+      const targetTab = document.getElementById('tab-' + tabId);
+      if (targetTab) targetTab.classList.remove('hidden');
+
+      const activeBtn = document.getElementById('nav-btn-' + tabId);
+      if (activeBtn) {
+        activeBtn.classList.remove('bg-slate-900/40', 'text-slate-300', 'border-transparent');
+        if (tabId === 'findings') {
+          activeBtn.classList.add('bg-rose-950/60', 'text-rose-300', 'border-rose-900/60', 'shadow');
+        } else if (tabId === 'timeline') {
+          activeBtn.classList.add('bg-amber-950/60', 'text-amber-300', 'border-amber-900/60', 'shadow');
+        } else if (tabId === 'scope') {
+          activeBtn.classList.add('bg-emerald-950/60', 'text-emerald-300', 'border-emerald-900/60', 'shadow');
+        } else if (tabId === 'repeater') {
+          activeBtn.classList.add('bg-sky-950/60', 'text-sky-300', 'border-sky-900/60', 'shadow');
+        } else if (tabId === 'copilot') {
+          activeBtn.classList.add('bg-purple-950/60', 'text-purple-300', 'border-purple-900/60', 'shadow');
+        } else if (tabId === 'scenarios') {
+          activeBtn.classList.add('bg-emerald-950/60', 'text-emerald-300', 'border-emerald-900/60', 'shadow');
+        } else {
+          activeBtn.classList.add('bg-sky-950/60', 'text-sky-300', 'border-sky-900/60', 'shadow');
+        }
+      }
+
+      const breadcrumb = document.getElementById('page-breadcrumb');
+      if (breadcrumb) breadcrumb.innerText = pageTitles[tabId] || tabId;
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      if (tabId === 'findings') loadFindings();
+      if (tabId === 'timeline') loadTimeline();
+      if (tabId === 'scope') loadScopeRules();
+      if (tabId === 'scenarios') loadScenarios();
+      if (tabId === 'attack-surface') loadAttackSurface();
+      if (tabId === 'hypotheses') loadHypotheses();
+    }
+
+    // Direct Scope Setup Form Handler
+    async function saveQuickScope() {
+      const primaryTarget = document.getElementById('studio-primary-target').value.trim();
+      if (!primaryTarget) return alert("يرجى إدخال اسم أو رابط الهدف الرئيسي (Primary Target).");
+
+      const rawInScope = document.getElementById('studio-additional-inscope').value.split('\n');
+      const additionalInScope = rawInScope.map(s => s.trim()).filter(Boolean);
+
+      const rawOutOfScope = document.getElementById('studio-out-of-scope').value.split('\n');
+      const outOfScope = rawOutOfScope.map(s => s.trim()).filter(Boolean);
+
+      const rps = parseInt(document.getElementById('studio-rps').value) || 5;
+
+      try {
+        const resp = await fetch('/api/scope/quick-setup', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            primary_target: primaryTarget,
+            additional_in_scope: additionalInScope,
+            out_of_scope: outOfScope,
+            rate_limit_rps: rps,
+            researcher_identity: 'almoatasem_bellah'
+          })
+        });
+
+        const data = await resp.json();
+        if (data.success) {
+          showToast("تم تطبيق النطاق الجديد بنجاح على المحرك الأمني!");
+          await refreshStatus();
+          await loadScopeRules();
+          switchTab('findings');
+        } else {
+          alert("خطأ في تطبيق النطاق: " + (data.detail || "Unknown error"));
+        }
+      } catch (err) {
+        alert("فشل الاتصال بالخادم: " + err);
+      }
+    }
+
+    // Presets loader
+    async function loadPresetProfile(presetName) {
+      try {
+        const resp = await fetch('/api/engagements/load-preset/' + presetName, { method: 'POST' });
+        const data = await resp.json();
+        if (data.success) {
+          showToast("تم تحميل بروفايل '" + presetName + "' بنجاح!");
+          await refreshStatus();
+          await loadScopeRules();
+          switchTab('findings');
+        } else {
+          alert("فشل تحميل النموذج: " + (data.detail || "Unknown error"));
+        }
+      } catch (e) {
+        alert("خطأ: " + e);
+      }
+    }
+
+    // =========================================================================
+    // PILLAR 1: SPA CRAWLER HANDLERS
+    // =========================================================================
+    let cachedCrawlerResults = [];
+
+    function fillCrawlerTarget() {
+      const activeTarget = document.getElementById('sidebar-target-name')?.innerText?.trim();
+      if (activeTarget && activeTarget !== 'Active Target') {
+        const url = activeTarget.startsWith('http') ? activeTarget : `https://${activeTarget}`;
+        document.getElementById('crawler-target-url').value = url;
+      }
+    }
+
+    async function runCrawlerAction() {
+      const targetUrl = document.getElementById('crawler-target-url').value.trim();
+      const maxScripts = parseInt(document.getElementById('crawler-max-scripts').value) || 15;
+      const btn = document.getElementById('crawler-start-btn');
+
+      if (!targetUrl) return alert("يرجى إدخال رابط الهدف (Base URL).");
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري فحص المسارات وحزم JS...';
+
+      try {
+        const resp = await fetch('/api/crawler/run', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ base_url: targetUrl, max_scripts: maxScripts })
+        });
+        const data = await resp.json();
+        if (resp.ok) {
+          showToast(`اكتمل الفحص! تم العثور على ${data.discovered_count} مسار ونقطة اتصال.`);
+          document.getElementById('crawler-stat-scripts').innerText = data.scanned_scripts?.length || 0;
+          document.getElementById('crawler-stat-routes').innerText = data.client_routes_count || 0;
+          document.getElementById('crawler-stat-apis').innerText = data.api_endpoints_count || 0;
+          document.getElementById('crawler-stat-total').innerText = data.discovered_count || 0;
+
+          cachedCrawlerResults = data.discovered_endpoints || [];
+          renderCrawlerResults(cachedCrawlerResults);
+        } else {
+          alert("خطأ أثناء الزحف: " + (data.detail || "Unknown error"));
+        }
+      } catch (err) {
+        alert("فشل الاتصال: " + err);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-play"></i> لبدء فحص المسارات (Start SPA Crawl)';
+      }
+    }
+
+    function renderCrawlerResults(endpoints) {
+      const tbody = document.getElementById('crawler-results-tbody');
+      if (!endpoints || endpoints.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-slate-500 font-sans">لم يتم العثور على مسارات تطابق البحث.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = endpoints.map(ep => {
+        const typeBadge = ep.route_type === 'REST_API' 
+          ? '<span class="bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded text-[10px]">REST API</span>'
+          : '<span class="bg-indigo-950 text-indigo-400 border border-indigo-800 px-2 py-0.5 rounded text-[10px]">SPA ROUTE</span>';
+        
+        const paramsBadge = (ep.parameters && ep.parameters.length > 0)
+          ? ep.parameters.map(p => `<span class="bg-slate-800 text-amber-300 px-1 py-0.5 rounded mr-1 text-[10px]">${p}</span>`).join('')
+          : '<span class="text-slate-600 font-sans text-[11px]">—</span>';
+
+        return `
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="py-2.5 px-3">${typeBadge}</td>
+            <td class="py-2.5 px-3 font-bold text-sky-400">${ep.method || 'GET'}</td>
+            <td class="py-2.5 px-3 text-slate-200 truncate max-w-xs font-mono" title="${ep.url}">${ep.path}</td>
+            <td class="py-2.5 px-3 text-slate-400 text-[11px] truncate max-w-[150px]">${ep.source || 'HTML/JS'}</td>
+            <td class="py-2.5 px-3">${paramsBadge}</td>
+            <td class="py-2.5 px-3 text-right">
+              <button onclick="sendToRepeaterFromUrl('${ep.url}', '${ep.method || 'GET'}')" class="text-[10px] bg-slate-800 hover:bg-sky-950 hover:text-sky-300 text-slate-300 px-2 py-1 rounded border border-slate-700 mr-1">
+                <i class="fa-solid fa-repeat"></i> Repeater
+              </button>
+              <button onclick="sendToMinerFromUrl('${ep.url}')" class="text-[10px] bg-slate-800 hover:bg-amber-950 hover:text-amber-300 text-slate-300 px-2 py-1 rounded border border-slate-700">
+                <i class="fa-solid fa-vial"></i> Miner
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterCrawlerResults() {
+      const q = document.getElementById('crawler-filter-input').value.toLowerCase();
+      const filtered = cachedCrawlerResults.filter(e => (e.path || '').toLowerCase().includes(q) || (e.url || '').toLowerCase().includes(q));
+      renderCrawlerResults(filtered);
+    }
+
+    // =========================================================================
+    // PILLAR 2: PASSIVE INTERCEPTION PROXY HANDLERS
+    // =========================================================================
+    async function startProxyAction() {
+      try {
+        const resp = await fetch('/api/proxy/start', { method: 'POST' });
+        const data = await resp.json();
+        if (resp.ok) {
+          showToast(`تم تشغيل البروكسي على ${data.host}:${data.port}`);
+          await loadProxyTraffic();
+        } else {
+          alert("خطأ في تشغيل البروكسي: " + (data.detail || "Unknown error"));
+        }
+      } catch (e) {
+        alert("فشل الاتصال: " + e);
+      }
+    }
+
+    async function stopProxyAction() {
+      try {
+        const resp = await fetch('/api/proxy/stop', { method: 'POST' });
+        const data = await resp.json();
+        showToast("تم إيقاف البروكسي.");
+        await loadProxyTraffic();
+      } catch (e) {
+        alert("فشل الاتصال: " + e);
+      }
+    }
+
+    async function clearProxyTrafficAction() {
+      if (!confirm("هل أنت متأكد من مسح سجل الحزم الملتقطة؟")) return;
+      try {
+        await fetch('/api/proxy/traffic', { method: 'DELETE' });
+        showToast("تم مسح السجل بنجاح.");
+        await loadProxyTraffic();
+      } catch (e) {
+        alert("فشل المسح: " + e);
+      }
+    }
+
+    async function loadProxyTraffic() {
+      try {
+        const statusResp = await fetch('/api/proxy/status');
+        const statusData = await statusResp.json();
+        
+        const pill = document.getElementById('proxy-status-pill');
+        const badge = document.getElementById('nav-badge-proxy');
+        if (statusData.is_running) {
+          if (pill) {
+            pill.innerText = `ACTIVE ON :${statusData.port}`;
+            pill.className = 'text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded-full font-mono animate-pulse';
+          }
+          if (badge) {
+            badge.innerText = 'ON';
+            badge.className = 'text-[9px] bg-emerald-950 text-emerald-400 border border-emerald-800 px-1.5 py-0.5 rounded font-mono font-bold';
+          }
+        } else {
+          if (pill) {
+            pill.innerText = 'STOPPED';
+            pill.className = 'text-[10px] bg-slate-800 text-slate-400 border border-slate-700 px-2 py-0.5 rounded-full font-mono';
+          }
+          if (badge) {
+            badge.innerText = 'OFF';
+            badge.className = 'text-[9px] bg-slate-900 text-slate-500 border border-slate-800 px-1.5 py-0.5 rounded font-mono font-bold';
+          }
+        }
+
+        const inScopeOnly = document.getElementById('proxy-in-scope-toggle')?.checked || false;
+        const trafficResp = await fetch(`/api/proxy/traffic?limit=100&in_scope_only=${inScopeOnly}`);
+        const trafficData = await trafficResp.json();
+        const items = trafficData.traffic || [];
+
+        let tokensCount = 0;
+        let headerAlerts = 0;
+        items.forEach(t => {
+          if (t.passive_leak_detected || (t.detected_tokens && t.detected_tokens.length > 0)) tokensCount++;
+          if (t.missing_security_headers && t.missing_security_headers.length > 0) headerAlerts++;
+        });
+
+        document.getElementById('proxy-stat-captured').innerText = items.length;
+        document.getElementById('proxy-stat-tokens').innerText = tokensCount;
+        document.getElementById('proxy-stat-headers').innerText = headerAlerts;
+
+        renderProxyTrafficTable(items);
+      } catch (err) {
+        console.error("loadProxyTraffic error:", err);
+      }
+    }
+
+    function renderProxyTrafficTable(items) {
+      const tbody = document.getElementById('proxy-traffic-tbody');
+      if (!items || items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-slate-500 font-sans">لا توجد حزم ملتقطة بعد. شغل البروكسي وقم بتصفح الموقع.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = items.map(item => {
+        const timeStr = item.timestamp ? item.timestamp.split('T')[1]?.split('.')[0] : '—';
+        const statusColor = item.response_status < 300 ? 'text-emerald-400' : (item.response_status < 400 ? 'text-sky-400' : 'text-rose-400');
+        
+        let alertsHtml = '';
+        if (item.passive_leak_detected || (item.detected_tokens && item.detected_tokens.length > 0)) {
+          alertsHtml += `<span class="bg-rose-950 text-rose-300 border border-rose-800 px-1.5 py-0.5 rounded text-[10px] mr-1"><i class="fa-solid fa-key mr-0.5"></i> Token Leak</span>`;
+        }
+        if (item.missing_security_headers && item.missing_security_headers.length > 0) {
+          alertsHtml += `<span class="bg-amber-950 text-amber-300 border border-amber-800 px-1.5 py-0.5 rounded text-[10px]" title="Missing: ${item.missing_security_headers.join(', ')}"><i class="fa-solid fa-shield-halved mr-0.5"></i> ${item.missing_security_headers.length} Headers</span>`;
+        }
+        if (!alertsHtml) alertsHtml = '<span class="text-slate-600 font-sans text-[11px]">—</span>';
+
+        const fullUrl = `http://${item.host}${item.path}`;
+
+        return `
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="py-2.5 px-3 text-slate-400 text-[11px]">${timeStr}</td>
+            <td class="py-2.5 px-3 font-bold text-sky-400">${item.method}</td>
+            <td class="py-2.5 px-3 truncate max-w-xs font-mono" title="${fullUrl}">
+              <span class="text-slate-400">${item.host}</span><span class="text-slate-200">${item.path}</span>
+            </td>
+            <td class="py-2.5 px-3 font-bold ${statusColor}">${item.response_status || '—'}</td>
+            <td class="py-2.5 px-3">${alertsHtml}</td>
+            <td class="py-2.5 px-3 text-right">
+              <button onclick="sendToRepeaterFromUrl('${fullUrl}', '${item.method}')" class="text-[10px] bg-slate-800 hover:bg-sky-950 hover:text-sky-300 text-slate-300 px-2 py-1 rounded border border-slate-700 mr-1">
+                <i class="fa-solid fa-repeat"></i>
+              </button>
+              <button onclick="sendToMinerFromUrl('${fullUrl}')" class="text-[10px] bg-slate-800 hover:bg-amber-950 hover:text-amber-300 text-slate-300 px-2 py-1 rounded border border-slate-700">
+                <i class="fa-solid fa-vial"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // =========================================================================
+    // PILLAR 3: PARAMETER MINER HANDLERS
+    // =========================================================================
+    function fillMinerTarget() {
+      const activeTarget = document.getElementById('sidebar-target-name')?.innerText?.trim();
+      if (activeTarget && activeTarget !== 'Active Target') {
+        const url = activeTarget.startsWith('http') ? activeTarget : `https://${activeTarget}`;
+        document.getElementById('miner-url').value = url;
+      }
+    }
+
+    function sendToMinerFromUrl(url) {
+      document.getElementById('miner-url').value = url;
+      switchTab('param-miner');
+    }
+
+    function sendToRepeaterFromUrl(url, method) {
+      document.getElementById('repeater-url').value = url;
+      document.getElementById('repeater-method').value = method || 'GET';
+      switchTab('repeater');
+    }
+
+    async function runParamMinerAction() {
+      const url = document.getElementById('miner-url').value.trim();
+      if (!url) return alert("يرجى إدخال رابط نقطة النهاية (Endpoint URL).");
+
+      const customInput = document.getElementById('miner-custom-params').value.trim();
+      const customParams = customInput ? customInput.split(',').map(s => s.trim()).filter(Boolean) : null;
+
+      const btn = document.getElementById('miner-run-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري إرسال الكناري وفحص الشذوذ...';
+
+      try {
+        const resp = await fetch('/api/audit/param-miner/run', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ endpoint_url: url, custom_params: customParams })
+        });
+        const data = await resp.json();
+        if (resp.ok) {
+          const results = data.results || [];
+          document.getElementById('miner-results-count').innerText = `${results.length} Anomalies Found`;
+          showToast(`اكتمل تنقيب المعاملات! تم رصد ${results.length} شذوذ في الاستجابة.`);
+          renderMinerResults(results);
+        } else {
+          alert("خطأ أثناء التنقيب: " + (data.detail || "Unknown error"));
+        }
+      } catch (err) {
+        alert("فشل الاتصال: " + err);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> بدء تنقيب المعاملات (Mine Parameters)';
+      }
+    }
+
+    function renderMinerResults(results) {
+      const tbody = document.getElementById('miner-results-tbody');
+      if (!results || results.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-slate-500 font-sans">لم يتم رصد أي شذوذ في المعاملات المختبرة (Target behaved predictably).</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = results.map(r => {
+        const driftBadge = r.status_drift 
+          ? `<span class="bg-rose-950 text-rose-300 border border-rose-800 px-2 py-0.5 rounded text-[10px] font-bold">${r.baseline_status} ➔ ${r.probed_status}</span>`
+          : `<span class="text-slate-400">${r.probed_status} (Steady)</span>`;
+
+        const deltaColor = Math.abs(r.length_delta) > 50 ? 'text-amber-300 font-bold' : 'text-slate-400';
+        const deltaText = (r.length_delta > 0 ? '+' : '') + r.length_delta + ' B';
+
+        let contextBadge = '<span class="text-slate-600 font-sans text-[11px]">—</span>';
+        if (r.reflection_detected) {
+          contextBadge = `<span class="bg-purple-950 text-purple-300 border border-purple-800 px-2 py-0.5 rounded text-[10px] font-mono font-bold">${r.reflection_context}</span>`;
+        }
+
+        const scoreColor = r.anomaly_score >= 6 ? 'text-rose-400' : 'text-amber-400';
+
+        let riskBadge = '<span class="bg-slate-800 text-slate-400 px-2 py-0.5 rounded text-[10px]">LOW</span>';
+        if (r.risk_level === 'CRITICAL') riskBadge = '<span class="bg-red-950 text-red-300 border border-red-800 px-2 py-0.5 rounded text-[10px] font-bold glow-rose">CRITICAL</span>';
+        else if (r.risk_level === 'HIGH') riskBadge = '<span class="bg-rose-950 text-rose-300 border border-rose-800 px-2 py-0.5 rounded text-[10px] font-bold">HIGH</span>';
+        else if (r.risk_level === 'MEDIUM') riskBadge = '<span class="bg-amber-950 text-amber-300 border border-amber-800 px-2 py-0.5 rounded text-[10px] font-bold">MEDIUM</span>';
+
+        return `
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="py-2.5 px-3 font-bold text-sky-400 font-mono">${r.param_name}</td>
+            <td class="py-2.5 px-3">${driftBadge}</td>
+            <td class="py-2.5 px-3 ${deltaColor} font-mono">${deltaText}</td>
+            <td class="py-2.5 px-3">${contextBadge}</td>
+            <td class="py-2.5 px-3 ${scoreColor} font-bold font-mono">${r.anomaly_score} / 10</td>
+            <td class="py-2.5 px-3">${riskBadge}</td>
+            <td class="py-2.5 px-3 text-right">
+              <button onclick="sendToRepeaterFromUrl('${r.probed_url}', 'GET')" class="text-[10px] bg-slate-800 hover:bg-sky-950 hover:text-sky-300 text-slate-300 px-2.5 py-1 rounded border border-slate-700">
+                <i class="fa-solid fa-repeat"></i> Verify
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // =========================================================================
+    // PILLAR 4: ATTACK GRAPH & EXPLOIT CHAINING HANDLERS
+    // =========================================================================
+    async function loadAttackGraph() {
+      try {
+        const resp = await fetch('/api/attack-graph');
+        const data = await resp.json();
+        
+        const nodes = data.nodes || [];
+        const chains = data.chains || [];
+
+        const assetCount = nodes.filter(n => n.node_type === 'ASSET').length;
+        const vulnCount = nodes.filter(n => n.node_type === 'VULNERABILITY').length;
+        
+        let maxCvss = 0.0;
+        chains.forEach(c => {
+          if (c.composite_cvss > maxCvss) maxCvss = c.composite_cvss;
+        });
+
+        document.getElementById('graph-stat-assets').innerText = assetCount;
+        document.getElementById('graph-stat-vulns').innerText = vulnCount;
+        document.getElementById('graph-stat-chains').innerText = chains.length;
+        document.getElementById('graph-stat-max-cvss').innerText = maxCvss > 0 ? maxCvss.toFixed(1) : '0.0';
+
+        renderAttackChains(chains);
+        renderGraphNodes(nodes);
+      } catch (err) {
+        console.error("loadAttackGraph error:", err);
+      }
+    }
+
+    function renderAttackChains(chains) {
+      const container = document.getElementById('graph-chains-container');
+      if (!chains || chains.length === 0) {
+        container.innerHTML = '<div class="p-8 text-center bg-slate-900 border border-slate-800 rounded-2xl text-slate-500 text-xs">لم يتم رصد سلاسل استغلال مركبة حتى الآن. (No exploit chains formed yet).</div>';
+        return;
+      }
+
+      container.innerHTML = chains.map((ch, idx) => {
+        const stepsHtml = (ch.steps || []).map((st, sidx) => `
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full bg-rose-950 border border-rose-800 text-rose-300 text-[11px] font-bold flex items-center justify-center flex-shrink-0">${sidx + 1}</span>
+            <span class="text-xs text-slate-200">${st}</span>
+          </div>
+        `).join('<div class="text-slate-600 my-1 ml-3 text-xs"><i class="fa-solid fa-arrow-down"></i></div>');
+
+        return `
+          <div class="bg-slate-900 border border-rose-900/40 rounded-2xl p-5 shadow-xl space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
+              <div class="flex items-center gap-2.5">
+                <span class="w-8 h-8 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 font-bold text-xs">#${idx + 1}</span>
+                <h4 class="font-extrabold text-white text-sm">${ch.name}</h4>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] bg-red-950 text-red-300 border border-red-800 px-2.5 py-1 rounded-full font-mono font-extrabold glow-rose">COMPOSITE CVSS ${ch.composite_cvss}</span>
+                <span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-1 rounded font-bold">${ch.severity}</span>
+              </div>
+            </div>
+
+            <div class="p-4 bg-slate-950/80 rounded-xl border border-slate-800/80 space-y-2">
+              <div class="text-[10px] text-slate-400 font-mono uppercase tracking-wider mb-2">Exploit Sequence:</div>
+              ${stepsHtml}
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs pt-1">
+              <div class="p-3 bg-slate-950/50 rounded-lg border border-slate-800">
+                <span class="text-[10px] text-slate-400 block font-mono">Total Impact:</span>
+                <span class="text-slate-200 font-semibold">${ch.impact}</span>
+              </div>
+              <div class="p-3 bg-slate-950/50 rounded-lg border border-slate-800">
+                <span class="text-[10px] text-slate-400 block font-mono">Remediation Priority:</span>
+                <span class="text-emerald-400 font-semibold">${ch.remediation}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderGraphNodes(nodes) {
+      const tbody = document.getElementById('graph-nodes-tbody');
+      if (!nodes || nodes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-500 font-sans">لا توجد عقد مسجلة بعد.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = nodes.map(n => {
+        const typeBadge = n.node_type === 'VULNERABILITY'
+          ? '<span class="bg-rose-950 text-rose-400 border border-rose-800 px-2 py-0.5 rounded text-[10px]">VULNERABILITY</span>'
+          : '<span class="bg-sky-950 text-sky-400 border border-sky-800 px-2 py-0.5 rounded text-[10px]">ASSET</span>';
+
+        return `
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="py-2.5 px-3 text-slate-400 font-mono text-[11px]">${n.id}</td>
+            <td class="py-2.5 px-3 font-semibold text-slate-200">${n.label}</td>
+            <td class="py-2.5 px-3">${typeBadge}</td>
+            <td class="py-2.5 px-3 text-amber-400 font-bold">${n.severity || '—'}</td>
+            <td class="py-2.5 px-3 font-mono font-bold text-rose-400">${n.cvss_score ? n.cvss_score.toFixed(1) : '—'}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Refresh overall status & counts
+    async function refreshStatus() {
+      try {
+        const resp = await fetch('/api/engagements/current');
+        const data = await resp.json();
+        if (data.active) {
+          const sbTarget = document.getElementById('sidebar-target-name');
+          if (sbTarget) sbTarget.innerText = data.name || 'Active Target';
+
+          const sbRate = document.getElementById('sidebar-rate-limit');
+          if (sbRate) sbRate.innerText = data.rate_limit_rps + " RPS";
+
+          const sbState = document.getElementById('sidebar-state');
+          if (sbState) sbState.innerText = data.status || 'READY';
+
+          const fResp = await fetch('/api/findings');
+          const fData = await fResp.json();
+          cachedFindings = fData.findings || [];
+          const fBadge = document.getElementById('nav-badge-findings');
+          if (fBadge) fBadge.innerText = cachedFindings.length;
+
+          const tResp = await fetch('/api/timeline');
+          const tData = await tResp.json();
+          cachedTimeline = tData.timeline || [];
+          const tBadge = document.getElementById('nav-badge-timeline');
+          if (tBadge) tBadge.innerText = cachedTimeline.length;
+
+          const sResp = await fetch('/api/scope');
+          const sData = await sResp.json();
+          const rules = sData.rules || [];
+          const sBadge = document.getElementById('nav-badge-scope');
+          if (sBadge) sBadge.innerText = rules.length + " Rules";
+        }
+      } catch (err) {
+        console.error("refreshStatus error:", err);
+      }
+    }
+
+    // Load Findings
+    async function loadFindings() {
+      const resp = await fetch('/api/findings');
+      const data = await resp.json();
+      cachedFindings = data.findings || [];
+      renderFindings();
+    }
+
+    function filterFindings(sev) {
+      currentFindingFilter = sev;
+      document.querySelectorAll('.filter-btn-findings').forEach(btn => {
+        btn.classList.remove('bg-slate-800', 'text-white', 'font-bold');
+        btn.classList.add('text-slate-400');
+      });
+      if (sev === 'ALL') document.getElementById('filter-f-all').classList.add('bg-slate-800', 'text-white', 'font-bold');
+      if (sev === 'HIGH') document.getElementById('filter-f-high').classList.add('bg-slate-800', 'text-white', 'font-bold');
+      if (sev === 'MEDIUM') document.getElementById('filter-f-med').classList.add('bg-slate-800', 'text-white', 'font-bold');
+      if (sev === 'LOW') document.getElementById('filter-f-low').classList.add('bg-slate-800', 'text-white', 'font-bold');
+      renderFindings();
+    }
+
+    function renderFindings() {
+      const container = document.getElementById('findings-container');
+      const countEl = document.getElementById('findings-display-count');
+      container.innerHTML = '';
+
+      let filtered = cachedFindings;
+      if (currentFindingFilter === 'HIGH') {
+        filtered = cachedFindings.filter(f => f.severity === 'HIGH' || f.severity === 'CRITICAL');
+      } else if (currentFindingFilter === 'MEDIUM') {
+        filtered = cachedFindings.filter(f => f.severity === 'MEDIUM');
+      } else if (currentFindingFilter === 'LOW') {
+        filtered = cachedFindings.filter(f => f.severity === 'LOW' || f.severity === 'INFO');
+      }
+
+      if (countEl) countEl.innerText = filtered.length;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="p-12 text-center text-slate-500 border border-dashed border-slate-800 rounded-2xl space-y-3">
+            <i class="fa-solid fa-shield-check text-3xl text-emerald-500"></i>
+            <p class="text-sm font-semibold text-slate-300">No findings recorded under this filter.</p>
+            <p class="text-xs text-slate-500">Click "Run Security Assessment" to start discovering vulnerabilities.</p>
+          </div>
+        `;
+        return;
+      }
+
+      const sevColors = {
+        'CRITICAL': 'bg-rose-950 text-rose-300 border-rose-800 glow-rose',
+        'HIGH': 'bg-red-950 text-red-300 border-red-800',
+        'MEDIUM': 'bg-amber-950 text-amber-300 border-amber-800',
+        'LOW': 'bg-sky-950 text-sky-300 border-sky-800',
+        'INFO': 'bg-slate-800 text-slate-300 border-slate-700'
+      };
+
+      filtered.forEach((f, idx) => {
+        const card = document.createElement('div');
+        const badgeClass = sevColors[f.severity] || 'bg-slate-800 text-slate-300';
+        const curlPoc = `curl -i -s -H "User-Agent: AutonomousSecurityAuditor/1.0" -H "X-Security-Research: almoatasem_bellah" "${f.affected_asset}"`;
+
+        card.className = 'bg-slate-950/90 border border-slate-800 hover:border-slate-700 p-5 rounded-2xl space-y-3.5 shadow-xl transition';
+        card.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
+            <div class="flex items-center gap-3">
+              <span class="px-3 py-1 rounded-full text-xs font-extrabold border ${badgeClass}">${f.severity}</span>
+              <h4 class="text-base font-bold text-white tracking-tight">${f.title}</h4>
+            </div>
+            
+            <!-- Quick Action Bar for Finding -->
+            <div class="flex items-center flex-wrap gap-2">
+              <button onclick="openInRepeater('${f.affected_asset}')" class="text-xs bg-sky-950/60 hover:bg-sky-900 text-sky-300 px-3 py-1.5 rounded-lg border border-sky-800 transition font-semibold flex items-center gap-1.5" title="Open in Burp Repeater">
+                <i class="fa-solid fa-repeat"></i> Open in Repeater
+              </button>
+              <button onclick="openBountyModal('${f.id}')" class="text-xs bg-rose-950/60 hover:bg-rose-900 text-rose-300 px-3 py-1.5 rounded-lg border border-rose-800 transition font-semibold flex items-center gap-1.5" title="Generate HackerOne Draft">
+                <i class="fa-solid fa-flag"></i> HackerOne Report
+              </button>
+              <button onclick="copyToClipboard('${btoa(curlPoc)}')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1.5 rounded-lg border border-slate-700 transition" title="Copy curl PoC">
+                <i class="fa-solid fa-copy mr-1 text-slate-400"></i> Copy curl
+              </button>
+            </div>
+          </div>
+
+          <div class="text-xs text-slate-400 font-mono flex items-center gap-1.5 bg-slate-900/60 p-2 rounded-lg border border-slate-800/80">
+            <i class="fa-solid fa-bullseye text-sky-400"></i> <strong class="text-slate-300">Target Asset:</strong> ${f.affected_asset}
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
+            <div class="bg-slate-900/80 p-3.5 rounded-xl border border-slate-800/60 space-y-1.5">
+              <span class="font-bold text-slate-300 flex items-center gap-1.5">
+                <i class="fa-solid fa-shoe-prints text-sky-400"></i> Verified Reproduction Steps:
+              </span>
+              <pre class="font-mono text-[11px] text-slate-300 whitespace-pre-wrap leading-relaxed bg-slate-950 p-2.5 rounded-lg border border-slate-800/80">${f.reproduction_steps}</pre>
+            </div>
+
+            <div class="bg-slate-900/80 p-3.5 rounded-xl border border-slate-800/60 space-y-1.5">
+              <span class="font-bold text-slate-300 flex items-center gap-1.5">
+                <i class="fa-solid fa-wrench text-emerald-400"></i> Professional Remediation Advice:
+              </span>
+              <p class="text-slate-300 leading-relaxed text-xs bg-slate-950 p-2.5 rounded-lg border border-slate-800/80">${f.remediation_advice}</p>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // =========================================================================
+    // REPEATER LOGIC
+    // =========================================================================
+    function openInRepeater(url) {
+      setRepeaterTarget('GET', url);
+      switchTab('repeater');
+      showToast("Loaded endpoint into Request Repeater!");
+    }
+
+    function setRepeaterTarget(method, url) {
+      document.getElementById('rep-method').value = method;
+      document.getElementById('rep-url').value = url;
+    }
+
+    async function dispatchRepeaterRequest() {
+      const btn = document.getElementById('btn-rep-send');
+      const method = document.getElementById('rep-method').value;
+      const url = document.getElementById('rep-url').value.trim();
+      const rawHeaders = document.getElementById('rep-headers').value;
+      const body = document.getElementById('rep-body').value;
+
+      if (!url) return alert("Please specify target URL.");
+
+      // Parse headers
+      const headersObj = {};
+      rawHeaders.split('\n').forEach(line => {
+        const parts = line.split(':');
+        if (parts.length >= 2) {
+          const k = parts[0].trim();
+          const v = parts.slice(1).join(':').trim();
+          if (k) headersObj[k] = v;
+        }
+      });
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
+
+      try {
+        const resp = await fetch('/api/tools/repeater', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            method: method,
+            url: url,
+            headers: headersObj,
+            body: body || null
+          })
+        });
+        const data = await resp.json();
+
+        // Update status badge
+        const badge = document.getElementById('rep-resp-status-badge');
+        badge.innerText = `HTTP ${data.status_code}`;
+        badge.className = "px-2.5 py-0.5 rounded-full text-xs font-mono font-extrabold border ";
+        if (data.status_code >= 200 && data.status_code < 300) {
+          badge.className += "bg-emerald-950 text-emerald-300 border-emerald-800 glow-emerald";
+        } else if (data.status_code >= 400 && data.status_code < 500) {
+          badge.className += "bg-rose-950 text-rose-300 border-rose-800";
+        } else {
+          badge.className += "bg-amber-950 text-amber-300 border-amber-800";
+        }
+
+        // Latency
+        document.getElementById('rep-resp-latency').innerText = `${data.latency_ms} ms`;
+
+        // Headers
+        const formattedHeaders = Object.entries(data.headers || {})
+          .map(([k, v]) => `${k}: ${v}`).join('\n');
+        document.getElementById('rep-resp-headers').innerText = formattedHeaders || "No headers returned.";
+
+        // Body
+        document.getElementById('rep-resp-body').innerText = data.body || "[Empty Response Body]";
+
+        showToast(`Request finished (HTTP ${data.status_code} in ${data.latency_ms}ms)`);
+      } catch (err) {
+        alert("Repeater error: " + err);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send Request (إرسال الطلب)';
+      }
+    }
+
+    function copyResponseText(elementId) {
+      const text = document.getElementById(elementId).innerText;
+      navigator.clipboard.writeText(text);
+      showToast("Copied to clipboard!");
+    }
+
+    // =========================================================================
+    // HACKERONE BOUNTY REPORT MODAL
+    // =========================================================================
+    async function openBountyModal(findingId) {
+      try {
+        const resp = await fetch(`/api/findings/${findingId}/bounty-report`);
+        if (!resp.ok) return alert("Failed to fetch report draft.");
+        const data = await resp.json();
+        
+        document.getElementById('bounty-report-content').value = data.report_markdown;
+        document.getElementById('bounty-modal-cvss').innerText = `Severity: ${data.severity}`;
+        document.getElementById('bounty-modal').classList.remove('hidden');
+      } catch (err) {
+        alert("Error loading bounty report: " + err);
+      }
+    }
+
+    function closeBountyModal() {
+      document.getElementById('bounty-modal').classList.add('hidden');
+    }
+
+    function copyBountyReport() {
+      const content = document.getElementById('bounty-report-content').value;
+      navigator.clipboard.writeText(content);
+      showToast("HackerOne report markdown copied to clipboard!");
+    }
+
+    // =========================================================================
+    // AI COPILOT LOGIC
+    // =========================================================================
+    function askCoPilot(promptText) {
+      document.getElementById('copilot-input').value = promptText;
+      sendCoPilotMessage();
+    }
+
+    async function sendCoPilotMessage() {
+      const input = document.getElementById('copilot-input');
+      const msg = input.value.trim();
+      if (!msg) return;
+
+      const chatBox = document.getElementById('copilot-chat-box');
+      const btn = document.getElementById('btn-copilot-send');
+
+      // Append user message
+      const userDiv = document.createElement('div');
+      userDiv.className = 'flex items-start gap-3 bg-slate-900/90 p-4 rounded-2xl border border-slate-800 ml-8';
+      userDiv.innerHTML = `
+        <div class="w-8 h-8 rounded-xl bg-sky-600/20 border border-sky-500/40 flex items-center justify-center text-sky-400 flex-shrink-0 font-bold text-xs">
+          ME
+        </div>
+        <div class="space-y-1 text-xs">
+          <span class="font-bold text-white">المعتصم بالله</span>
+          <div class="text-slate-200 leading-relaxed">${msg}</div>
+        </div>
+      `;
+      chatBox.appendChild(userDiv);
+      input.value = '';
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Thinking...';
+
+      try {
+        const resp = await fetch('/api/copilot/chat', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ message: msg })
+        });
+        const data = await resp.json();
+
+        // Convert simple markdown in reply to HTML
+        let replyHtml = data.reply
+          .replace(/### (.*?)\n/g, '<h4 class="font-bold text-sm text-purple-300 mt-2 mb-1">$1</h4>')
+          .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>')
+          .replace(/```([a-z]*)\n([\s\S]*?)```/g, '<pre class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 text-[11px] font-mono text-emerald-300 my-1 overflow-x-auto whitespace-pre-wrap">$2</pre>')
+          .replace(/`([^`]+)`/g, '<code class="bg-slate-950 text-amber-300 px-1 py-0.5 rounded font-mono text-[10px]">$1</code>')
+          .replace(/\n/g, '<br>');
+
+        const botDiv = document.createElement('div');
+        botDiv.className = 'flex items-start gap-3 bg-slate-950 p-4 rounded-2xl border border-purple-900/40 mr-8';
+        botDiv.innerHTML = `
+          <div class="w-8 h-8 rounded-xl bg-purple-600/20 border border-purple-500/40 flex items-center justify-center text-purple-400 flex-shrink-0">
+            <i class="fa-solid fa-robot"></i>
+          </div>
+          <div class="space-y-1 text-xs flex-1">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-white">AI Security Co-Pilot</span>
+              <span class="text-[10px] text-purple-400 font-mono">Tactical Advisor</span>
+            </div>
+            <div class="text-slate-300 leading-relaxed">${replyHtml}</div>
+          </div>
+        `;
+        chatBox.appendChild(botDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      } catch (err) {
+        alert("Co-Pilot error: " + err);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> إرسال (Send)';
+      }
+    }
+
+    // Load Execution Steps & Timeline
+    async function loadTimeline() {
+      const resp = await fetch('/api/timeline');
+      const data = await resp.json();
+      cachedTimeline = data.timeline || [];
+      renderTimeline();
+    }
+
+    function renderTimeline() {
+      const container = document.getElementById('timeline-container');
+      const tBadge = document.getElementById('nav-badge-timeline');
+      if (tBadge) tBadge.innerText = cachedTimeline.length;
+      container.innerHTML = '';
+
+      if (cachedTimeline.length === 0) {
+        container.innerHTML = `
+          <div class="p-8 text-center text-slate-500 border border-dashed border-slate-800 rounded-2xl">
+            No execution steps recorded yet. Click "Run Security Assessment" to start auditing and recording decision steps.
+          </div>
+        `;
+        return;
+      }
+
+      cachedTimeline.forEach((step, idx) => {
+        const item = document.createElement('div');
+        item.className = 'relative pl-8 pb-4 group';
+
+        const dateStr = step.created_at ? new Date(step.created_at).toLocaleTimeString() : `Step ${idx+1}`;
+        const actionClean = (step.action_taken || 'STEP').replace(/_/g, ' ');
+
+        item.innerHTML = `
+          <div class="absolute -left-[11px] top-1.5 w-6 h-6 rounded-full bg-slate-950 border-2 border-amber-400 flex items-center justify-center shadow glow-amber">
+            <span class="text-[10px] font-mono font-bold text-amber-300">${idx+1}</span>
+          </div>
+
+          <div class="bg-slate-950/90 border border-slate-800 hover:border-slate-700 rounded-2xl p-5 space-y-3 shadow-xl transition">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-xs font-extrabold text-amber-400 uppercase tracking-wider bg-amber-950/60 border border-amber-800/80 px-2.5 py-1 rounded-md">
+                  <i class="fa-solid fa-code-branch mr-1 text-[10px]"></i> ${actionClean}
+                </span>
+                <span class="text-xs bg-emerald-950/60 text-emerald-400 border border-emerald-800/80 px-2 py-0.5 rounded font-mono text-[11px]">
+                  <i class="fa-solid fa-shield-halved mr-1"></i> Deterministic Gate: PASSED
+                </span>
+              </div>
+              <span class="text-xs text-slate-400 font-mono flex items-center gap-1.5">
+                <i class="fa-regular fa-clock text-amber-400"></i> ${dateStr}
+              </span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs pt-1">
+              <div class="bg-slate-900/70 p-3 rounded-xl border border-slate-800/60 space-y-1">
+                <span class="text-sky-400 font-bold block text-[11px] uppercase tracking-wider">
+                  <i class="fa-solid fa-brain mr-1"></i> Rationale (لماذا اتخذ هذا القرار؟)
+                </span>
+                <p class="text-slate-300 leading-relaxed text-[11px]">${step.rationale || 'N/A'}</p>
+              </div>
+
+              <div class="bg-slate-900/70 p-3 rounded-xl border border-slate-800/60 space-y-1">
+                <span class="text-purple-400 font-bold block text-[11px] uppercase tracking-wider">
+                  <i class="fa-solid fa-crosshairs mr-1"></i> Expected Signal (الإشارة المستهدفة)
+                </span>
+                <p class="text-slate-300 leading-relaxed text-[11px]">${step.expected_outcome || 'N/A'}</p>
+              </div>
+
+              <div class="bg-slate-900/70 p-3 rounded-xl border border-slate-800/60 space-y-1">
+                <span class="text-emerald-400 font-bold block text-[11px] uppercase tracking-wider">
+                  <i class="fa-solid fa-square-poll-vertical mr-1"></i> Actual Evidence (النتيجة والدليل)
+                </span>
+                <p class="text-slate-200 leading-relaxed text-[11px] font-mono bg-slate-950 p-1.5 rounded border border-slate-800/60 break-all">${step.actual_outcome || 'Completed successfully'}</p>
+              </div>
+            </div>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    // Load scope rules
+    async function loadScopeRules() {
+      const resp = await fetch('/api/scope');
+      const data = await resp.json();
+      const tbody = document.getElementById('scope-table-body');
+      tbody.innerHTML = '';
+
+      const rules = data.rules || [];
+      const sBadge = document.getElementById('nav-badge-scope');
+      if (sBadge) sBadge.innerText = rules.length + " Rules";
+
+      if (rules.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-500 font-sans">No scope rules found. Add one above!</td></tr>';
+        return;
+      }
+
+      rules.forEach(r => {
+        const isInclude = r.effect === 'INCLUDE';
+        const badgeClass = isInclude ? 'bg-emerald-950 text-emerald-400 border-emerald-800' : 'bg-rose-950 text-rose-400 border-rose-800';
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/40 transition';
+        tr.innerHTML = `
+          <td class="p-3"><span class="px-2.5 py-0.5 text-[10px] font-bold rounded border ${badgeClass}">${r.effect}</span></td>
+          <td class="p-3 font-mono font-bold text-slate-200">${r.pattern}</td>
+          <td class="p-3 text-slate-400 font-sans">${r.rule_type}</td>
+          <td class="p-3 font-mono">${r.priority}</td>
+          <td class="p-3 text-slate-400 text-xs font-sans">${r.notes || '-'}</td>
+          <td class="p-3 text-right">
+            <button onclick="deleteScopeRule('${r.id}')" class="text-rose-400 hover:text-rose-300 px-2.5 py-1 bg-rose-950/40 rounded-lg border border-rose-900/60 transition"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function deleteScopeRule(ruleId) {
+      if (!confirm("Are you sure you want to remove this scope target?")) return;
+      await fetch('/api/scope/' + ruleId, { method: 'DELETE' });
+      showToast("تم حذف الهدف من النطاق.");
+      loadScopeRules();
+      refreshStatus();
+    }
+
+    // Recon
+    async function triggerRecon() {
+      const btn = document.getElementById('btn-run-recon');
+      if (btn) {
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Running Recon...';
+        btn.disabled = true;
+      }
+
+      try {
+        const resp = await fetch('/api/run-recon', { method: 'POST' });
+        const data = await resp.json();
+        showToast("Recon completed! Discovered " + (data.results ? data.results.discovered_hosts_count : 0) + " live hosts.");
+        await refreshStatus();
+        await loadAttackSurface();
+        switchTab('attack-surface');
+      } catch (err) {
+        alert("Recon error: " + err);
+      } finally {
+        if (btn) {
+          btn.innerHTML = '<i class="fa-solid fa-satellite-dish"></i> Start In-Scope Recon';
+          btn.disabled = false;
+        }
+      }
+    }
+
+    async function loadAttackSurface() {
+      const resp = await fetch('/api/attack-surface');
+      const data = await resp.json();
+      
+      document.getElementById('metric-assets').innerText = data.summary.assets || 0;
+      document.getElementById('metric-hosts').innerText = data.summary.hosts || 0;
+      document.getElementById('metric-apps').innerText = data.summary.applications || 0;
+      document.getElementById('metric-endpoints').innerText = data.summary.endpoints || 0;
+
+      const tree = document.getElementById('attack-surface-tree');
+      tree.innerHTML = '';
+      if (!data.hierarchy || data.hierarchy.length === 0) {
+        tree.innerHTML = '<div class="text-slate-500 text-center py-6 font-sans">No live hosts mapped yet. Click "Start In-Scope Recon".</div>';
+        return;
+      }
+
+      data.hierarchy.forEach(h => {
+        const hDiv = document.createElement('div');
+        hDiv.className = 'border-l-2 border-sky-500/50 pl-3.5 py-1.5 space-y-1 bg-slate-900/40 rounded-r-xl';
+        let appsHtml = '';
+        h.applications.forEach(a => {
+          const techBadges = a.technologies.map(t => `<span class="bg-amber-950 text-amber-300 px-1.5 py-0.5 rounded text-[10px] mr-1 border border-amber-800">${t}</span>`).join('');
+          appsHtml += `<div class="text-slate-300 ml-4 mt-1">└─ <span class="text-emerald-400 font-bold">${a.base_url}</span> ${techBadges}</div>`;
+        });
+        hDiv.innerHTML = `<span class="text-sky-400 font-bold"><i class="fa-solid fa-server mr-1.5"></i> Host:</span> <strong class="text-white">${h.hostname}</strong> <span class="text-slate-500 font-mono text-[11px]">(IPs: ${h.ips.join(', ')})</span>${appsHtml}`;
+        tree.appendChild(hDiv);
+      });
+    }
+
+    // Hypotheses
+    async function loadHypotheses() {
+      const resp = await fetch('/api/hypotheses');
+      const data = await resp.json();
+      const container = document.getElementById('hypotheses-container');
+      container.innerHTML = '';
+
+      if (!data.hypotheses || data.hypotheses.length === 0) {
+        container.innerHTML = '<div class="p-8 text-center text-slate-500 border border-dashed border-slate-800 rounded-2xl col-span-2">No active hypotheses recorded yet.</div>';
+        return;
+      }
+
+      data.hypotheses.forEach(h => {
+        const card = document.createElement('div');
+        card.className = 'bg-slate-950 border border-slate-800 p-4 rounded-xl space-y-2.5 shadow';
+        card.innerHTML = `
+          <div class="flex items-center justify-between text-xs">
+            <span class="px-2.5 py-0.5 bg-purple-950 text-purple-300 border border-purple-800 rounded font-bold">${h.status}</span>
+            <span class="font-mono text-amber-400 font-bold">Priority: ${h.priority_score}</span>
+          </div>
+          <p class="text-sm font-bold text-slate-200">${h.statement}</p>
+          <div class="text-xs text-slate-400"><span class="text-slate-500">Impact:</span> ${h.potential_impact}</div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // Trigger Full Assessment
+    async function triggerFullAssessment() {
+      const btn = document.getElementById('btn-top-assessment');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Auditing Target...';
+      }
+
+      try {
+        const resp = await fetch('/api/run-assessment', { method: 'POST' });
+        const data = await resp.json();
+        showToast("Assessment completed! Discovered " + (data.findings_count || 0) + " verified vulnerabilities.");
+        await refreshStatus();
+        await loadAttackSurface();
+        await loadFindings();
+        await loadTimeline();
+        switchTab('findings');
+      } catch (err) {
+        alert("Assessment error: " + err);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Run Security Assessment';
+        }
+      }
+    }
+
+    // Generate Reports
+    async function generateReports() {
+      try {
+        const resp = await fetch('/api/generate-reports', { method: 'POST' });
+        const data = await resp.json();
+        if (data.success) {
+          showToast("Assessment deliverables & cryptographic packages generated!");
+          refreshStatus();
+          switchTab('reports');
+        }
+      } catch (err) {
+        alert("Error generating reports: " + err);
+      }
+    }
+
+    function loadSampleProfileIntoTextarea() {
+      document.getElementById('yaml-input').value = `# Standardized Target Profile
+program_metadata:
+  program_name: "OWASP Juice Shop Assessment"
+  platform: "OWASP-Project"
+  target_summary: "Official OWASP Juice Shop Vulnerable Application"
+  researcher_handle: "almoatasem_bellah"
+  authorization_reference: "OWASP-COMMUNITY-AUTH-2026"
+
+network_and_headers:
+  rate_limit_rps: 5
+  mandatory_headers:
+    User-Agent: "AutonomousSecurityAuditor/1.0"
+    X-Security-Research: "almoatasem_bellah"
+
+scope_definition:
+  in_scope:
+    - pattern: "preview.owasp-juice.shop"
+      type: "DOMAIN"
+      notes: "Main web app"
+    - pattern: "localhost"
+      type: "DOMAIN"
+      notes: "Local test instance"
+  out_of_scope:
+    - pattern: "github.com"
+      type: "DOMAIN"
+      notes: "Third-party repository"
+
+rule_checkboxes:
+  allow_automated_probing: true
+  allow_rate_limited_fuzzing: true
+  prohibit_dos_attacks: true
+  prohibit_destructive_writes: true`;
+    }
+
+    async function importProfile() {
+      const content = document.getElementById('yaml-input').value;
+      if (!content.trim()) return alert("يرجى لصق كود YAML صالح.");
+
+      try {
+        const resp = await fetch('/api/engagements/import', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ yaml_content: content })
+        });
+        const data = await resp.json();
+        if (data.success) {
+          showToast("تم استيراد البروفايل وقواعد النطاق بنجاح!");
+          await refreshStatus();
+          await loadScopeRules();
+          switchTab('scope');
+        } else {
+          alert("خطأ: " + (data.detail || "Import failed"));
+        }
+      } catch (err) {
+        alert("فشل الاتصال: " + err);
+      }
+    }
+
+    function copyToClipboard(b64Text) {
+      const text = atob(b64Text);
+      navigator.clipboard.writeText(text);
+      showToast("تم نسخ أمر التحقق إلى الحافظة!");
+    }
+
+    function showToast(message) {
+      const toast = document.createElement('div');
+      toast.className = 'fixed bottom-6 right-6 bg-slate-900 border border-emerald-500 text-white px-5 py-3 rounded-2xl shadow-2xl z-50 text-xs font-bold flex items-center gap-2.5 animate-bounce';
+      toast.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 text-base"></i> <span>${message}</span>`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    
+    // =========================================================================
+    // TACTICAL PLAYBOOKS & WRITEUP KNOWLEDGE BASE LOGIC
+    // =========================================================================
+    let allScenariosData = [];
+    let matchedScenarioIds = [];
+    let currentScenarioFilter = 'all';
+
+    async function loadScenarios() {
+      try {
+        const res = await fetch('/api/scenarios');
+        const data = await res.json();
+        allScenariosData = data.scenarios || [];
+        matchedScenarioIds = data.matched_ids || [];
+
+        // Update counts
+        const countAll = document.getElementById('count-all-scenarios');
+        if (countAll) countAll.innerText = allScenariosData.length;
+
+        const countMatched = document.getElementById('count-matched-scenarios');
+        if (countMatched) countMatched.innerText = matchedScenarioIds.length;
+
+        const navBadge = document.getElementById('nav-badge-scenarios');
+        if (navBadge) navBadge.innerText = matchedScenarioIds.length + ' MATCHED';
+
+        const techDisplay = document.getElementById('matched-tech-display');
+        if (techDisplay) {
+          techDisplay.innerText = (data.detected_tech && data.detected_tech.length > 0) 
+            ? data.detected_tech.join(', ') 
+            : 'Detecting via recon...';
+        }
+
+        renderScenarios(currentScenarioFilter);
+      } catch (err) {
+        console.error("Failed to load scenarios:", err);
+      }
+    }
+
+    function filterScenarios(cat) {
+      currentScenarioFilter = cat;
+      document.querySelectorAll('.scenario-filter-btn').forEach(btn => {
+        btn.classList.remove('bg-emerald-950', 'text-emerald-300', 'border-emerald-800');
+        btn.classList.add('bg-slate-800', 'text-slate-300', 'border-slate-700');
+      });
+      const activeBtn = document.getElementById('filter-btn-' + cat);
+      if (activeBtn) {
+        activeBtn.classList.remove('bg-slate-800', 'text-slate-300', 'border-slate-700');
+        activeBtn.classList.add('bg-emerald-950', 'text-emerald-300', 'border-emerald-800');
+      }
+      renderScenarios(cat);
+    }
+
+    function renderScenarios(filter = 'all') {
+      const grid = document.getElementById('scenarios-grid');
+      if (!grid) return;
+
+      let filtered = allScenariosData;
+      if (filter === 'matched') {
+        filtered = allScenariosData.filter(s => matchedScenarioIds.includes(s.id));
+      } else if (filter === 'api') {
+        filtered = allScenariosData.filter(s => s.category === 'API Security');
+      } else if (filter === 'cors') {
+        filtered = allScenariosData.filter(s => s.category === 'CORS & Headers');
+      } else if (filter === 'info') {
+        filtered = allScenariosData.filter(s => s.category === 'Info Disclosure');
+      } else if (filter === 'graphql') {
+        filtered = allScenariosData.filter(s => s.category === 'GraphQL');
+      }
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '<div class="col-span-full p-8 text-center text-slate-500 font-mono text-xs border border-dashed border-slate-800 rounded-2xl">No playbooks found in this category.</div>';
+        return;
+      }
+
+      grid.innerHTML = filtered.map(s => {
+        const isMatched = matchedScenarioIds.includes(s.id);
+        const sevColor = s.severity === 'HIGH' || s.severity === 'CRITICAL' ? 'rose' : (s.severity === 'MEDIUM' ? 'amber' : 'sky');
+        const techBadges = (s.technologies || []).map(t => `<span class="px-2 py-0.5 bg-slate-800 text-slate-300 rounded font-mono text-[10px]">${t}</span>`).join(' ');
+
+        return `
+          <div class="bg-slate-900 border ${isMatched ? 'border-emerald-500/50 bg-gradient-to-br from-slate-900 to-emerald-950/20' : 'border-slate-800'} rounded-2xl p-5 shadow-lg flex flex-col justify-between space-y-4 hover:border-slate-700 transition">
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between gap-2 flex-wrap">
+                <div class="flex items-center gap-2">
+                  <span class="text-[10px] bg-${sevColor}-950 text-${sevColor}-300 border border-${sevColor}-800 px-2 py-0.5 rounded font-extrabold uppercase font-mono">${s.severity}</span>
+                  <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">${s.category}</span>
+                </div>
+                ${isMatched ? '<span class="text-[10px] bg-emerald-900 text-emerald-300 font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-700"><i class="fa-solid fa-bullseye text-emerald-400"></i> MATCHED TO TARGET</span>' : ''}
+              </div>
+
+              <h4 class="text-sm font-bold text-white leading-snug">${s.title}</h4>
+              <p class="text-xs text-slate-300 leading-relaxed">${s.summary}</p>
+
+              <div class="p-3 bg-slate-950 rounded-xl border border-slate-800/80 space-y-1.5 text-[11px]">
+                <div class="text-slate-400"><strong class="text-slate-300">Hypothesis:</strong> ${s.hypothesis_statement}</div>
+                <div class="text-slate-500 flex items-center gap-1.5"><i class="fa-solid fa-bookmark text-amber-400"></i> <span>Ref: <strong>${s.reference}</strong></span></div>
+              </div>
+
+              <div class="flex items-center gap-1.5 flex-wrap pt-1">
+                <span class="text-[10px] text-slate-500 font-mono">Tech:</span>
+                ${techBadges}
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-3 border-t border-slate-800/80 gap-2">
+              <button onclick="deployScenario('${s.id}')" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow">
+                <i class="fa-solid fa-flask"></i> Deploy Hypothesis
+              </button>
+              <button onclick="openInRepeaterFromScenario('${s.id}')" class="px-3.5 py-2 bg-sky-950 hover:bg-sky-900 text-sky-300 border border-sky-800 rounded-xl text-xs font-bold transition flex items-center gap-1.5" title="Test in Request Repeater">
+                <i class="fa-solid fa-repeat"></i> Repeater
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function deployScenario(scenarioId) {
+      try {
+        const res = await fetch('/api/scenarios/apply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ scenario_id: scenarioId })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`تم إدراج السيناريو كفرضية اختبار نشطة: ${data.statement.slice(0, 40)}...`);
+          await refreshStatus();
+        } else {
+          alert("خطأ: " + (data.detail || "Deployment failed"));
+        }
+      } catch (err) {
+        alert("فشل الاتصال: " + err);
+      }
+    }
+
+    function openInRepeaterFromScenario(scenarioId) {
+      const scenario = allScenariosData.find(s => s.id === scenarioId);
+      if (!scenario) return;
+
+      const currentTarget = document.getElementById('sidebar-target-name').innerText.trim();
+      const cleanTarget = currentTarget ? currentTarget.replace('https://', '').replace('http://', '').split('/')[0] : 'preview.owasp-juice.shop';
+      const fullUrl = `https://${cleanTarget}${scenario.sample_path.startsWith('/') ? '' : '/'}${scenario.sample_path}`;
+
+      document.getElementById('repeater-method').value = scenario.sample_method || 'GET';
+      document.getElementById('repeater-url').value = fullUrl;
+
+      if (scenario.sample_headers && Object.keys(scenario.sample_headers).length > 0) {
+        document.getElementById('repeater-headers').value = JSON.stringify(scenario.sample_headers, null, 2);
+      } else {
+        document.getElementById('repeater-headers').value = '{\n  "Accept": "application/json"\n}';
+      }
+
+      document.getElementById('repeater-body').value = scenario.sample_body || '';
+
+      switchTab('repeater');
+      showToast(`تم تحميل سيناريو ${scenario.title} داخل الـ Repeater!`);
+    }
+
+    function openCustomWriteupModal() {
+      document.getElementById('custom-writeup-modal').classList.remove('hidden');
+    }
+
+    function closeCustomWriteupModal() {
+      document.getElementById('custom-writeup-modal').classList.add('hidden');
+    }
+
+    async function submitCustomWriteup() {
+      const title = document.getElementById('cw-title').value.trim();
+      const category = document.getElementById('cw-category').value;
+      const severity = document.getElementById('cw-severity').value;
+      const techStr = document.getElementById('cw-tech').value.trim();
+      const reference = document.getElementById('cw-reference').value.trim() || 'User Contributed Writeup';
+      const hypothesis = document.getElementById('cw-hypothesis').value.trim();
+      const summary = document.getElementById('cw-summary').value.trim();
+      const method = document.getElementById('cw-method').value;
+      const path = document.getElementById('cw-path').value.trim() || '/';
+
+      if (!title || !hypothesis || !summary) {
+        alert("الرجاء ملء عنوان السيناريو، الفرضية، والشرح التوضيحي.");
+        return;
+      }
+
+      const technologies = techStr ? techStr.split(',').map(s => s.trim()) : ['general'];
+
+      try {
+        const res = await fetch('/api/scenarios/custom', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title,
+            category,
+            severity,
+            technologies,
+            reference,
+            hypothesis_statement: hypothesis,
+            summary,
+            sample_method: method,
+            sample_path: path
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          closeCustomWriteupModal();
+          showToast("تمت إضافة السيناريو إلى قاعدة المعارف بنجاح!");
+          await loadScenarios();
+        } else {
+          alert("خطأ: " + (data.detail || "Failed to add writeup"));
+        }
+      } catch (err) {
+        alert("فشل الاتصال: " + err);
+      }
+    }
+
+    window.onload = async () => {
+      await refreshStatus();
+      loadSampleProfileIntoTextarea();
+      loadScenarios();
+      switchTab('findings');
+      setInterval(refreshStatus, 4000);
+    };
+  </script>
+</body>
+</html>
